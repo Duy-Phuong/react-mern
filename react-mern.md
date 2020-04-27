@@ -12,35 +12,87 @@ C:\Users\phuong\AppData\Local\Programs\Python\Python37\python.exe F:/programing/
 ======== name dir ========
 ## 1. Introduction
 ### 1. Welcome To The Course
+
+MEAN là Mongodb, express, angular, node js
+
+![image-20200427234017128](./react-mern.assets/image-20200427234017128.png)  
+
+ ![image-20200427234144109](./react-mern.assets/image-20200427234144109.png)  
+
+![image-20200427234206349](./react-mern.assets/image-20200427234206349.png)  
+
+![image-20200427234220121](./react-mern.assets/image-20200427234220121.png)
+
+Single page application: no reload page, only remove and add new some element
+
+Angular tutorial
+
+https://www.javatpoint.com/angularjs-tutorial 
+
+https://www.tutorialspoint.com/angular6/index.htm
+
+Install nodejs 10+
+
+Install angular cli
+
 ### 2. A Look At The Course Project
+
+
+
 ### 3. Environment & Setup
+
+gitbook
+
 ### 4. Link To Project Files.html
-## 10. Profile DIsplay
-### 1. Finish Profile Actions & Reducer
-### 2. Display Profiles
-### 3. Addressing The Console Warnings
-### 4. Starting On The Profile
-### 5. ProfileTop & ProfileAbout Components
-### 6. Profile Experience & Education Display
-### 7. Displaying Github Repos
-## 11. Posts & Comments
-### 1. Post Reducer, Action & Initial Component
-### 2. Post Item Component
-### 3. Like & Unlike Functionality
-### 4. Deleting Posts
-### 5. Adding Posts
-### 6. Single Post Display
-### 7. Adding Comments
-### 8. Comment Display & Delete
-## 12. Prepare & Deploy
-### 1. Install Heroku CLI
-### 2. Prepare For Deployment
-### 3. Deploy To Heroku
-## 13. Issues, Added Features, etc
-### 1. About This Section.html
-### 2. Not Found Page & Theme Workaround
+
+You can find the course project repository at the link below...
+
+https://github.com/bradtraversy/devconnector_2.0
+
 ## 2. Express & MongoDB Setup
 ### 1. MongoDB Atlas Setup
+
+tranduyphuong18100@gmail.com
+
+duyphuong1020
+
+Create new project
+
+![image-20200428010556017](./react-mern.assets/image-20200428010556017.png)  
+
+Sau đó choose build a cluster
+
+![image-20200428010815820](./react-mern.assets/image-20200428010815820.png)  
+
+![image-20200428010910279](./react-mern.assets/image-20200428010910279.png)  
+
+Đổi tên cluster 0 thành DevConnector rồi ấn create cluster
+
+Result
+
+![image-20200428011223524](./react-mern.assets/image-20200428011223524.png)  
+
+Ấn vào connect
+
+![image-20200428011746463](./react-mern.assets/image-20200428011746463.png)  
+
+![image-20200428011911538](./react-mern.assets/image-20200428011911538.png)  
+
+Chọn connect your application
+
+```shell
+mongodb+srv://Abc12345:<password>@devconnector-iiww1.mongodb.net/test?retryWrites=true&w=majority
+
+```
+
+![image-20200428012029719](./react-mern.assets/image-20200428012029719.png)  
+
+Back và ấn collection 
+
+![image-20200428012107943](./react-mern.assets/image-20200428012107943.png)  
+
+
+
 ### 2. Install Dependencies & Basic Express Setup
 ### 3. Connecting To MongoDB With Mongoose
 ### 4. Route Files With Express Router
@@ -95,6 +147,57 @@ C:\Users\phuong\AppData\Local\Programs\Python\Python37\python.exe F:/programing/
 ### 7. Add Education & Experiences
 ### 8. List Education & Experiences
 ### 9. Delete Education, Experiences & Account
+
+
+
+## 10. Profile DIsplay
+
+### 1. Finish Profile Actions & Reducer
+
+### 2. Display Profiles
+
+### 3. Addressing The Console Warnings
+
+### 4. Starting On The Profile
+
+### 5. ProfileTop & ProfileAbout Components
+
+### 6. Profile Experience & Education Display
+
+### 7. Displaying Github Repos
+
+## 11. Posts & Comments
+
+### 1. Post Reducer, Action & Initial Component
+
+### 2. Post Item Component
+
+### 3. Like & Unlike Functionality
+
+### 4. Deleting Posts
+
+### 5. Adding Posts
+
+### 6. Single Post Display
+
+### 7. Adding Comments
+
+### 8. Comment Display & Delete
+
+## 12. Prepare & Deploy
+
+### 1. Install Heroku CLI
+
+### 2. Prepare For Deployment
+
+### 3. Deploy To Heroku
+
+## 13. Issues, Added Features, etc
+
+### 1. About This Section.html
+
+### 2. Not Found Page & Theme Workaround
+
 ======== list file ========
 
 Process finished with exit code 0
