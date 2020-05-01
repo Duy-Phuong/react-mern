@@ -72,13 +72,39 @@ Result
 
 ![image-20200428011223524](./react-mern.assets/image-20200428011223524.png)  
 
-Ấn vào connect
+Ấn vào connect sau đó set user và ip
 
-![image-20200428011746463](./react-mern.assets/image-20200428011746463.png)  
+![image-20200428011746463](./react-mern.assets/image-20200428011746463.png)
+
+Hay ấn vào link để create user sau khi tạo r để xem chi tiết:
+
+![image-20200501131252780](./react-mern.assets/image-20200501131252780.png)
+
+  ![image-20200501131818035](./react-mern.assets/image-20200501131818035.png)  
+
+Username and pass là: Abc12345
+
+Edit lại quyền là read and write
+
+![image-20200501132204518](./react-mern.assets/image-20200501132204518.png)  
+
+WhileListIP
+
+![image-20200501132456003](react-mern.assets/image-20200501132456003.png)  
+
+allow access from anywhere rồi confirm
+
+![image-20200501132720464](./react-mern.assets/image-20200501132720464.png)  
+
+
+
+---
+
+
 
 ![image-20200428011911538](./react-mern.assets/image-20200428011911538.png)  
 
-Chọn connect your application
+Chọn connect your application rồi copy link
 
 ```shell
 mongodb+srv://Abc12345:<password>@devconnector-iiww1.mongodb.net/test?retryWrites=true&w=majority
@@ -87,15 +113,105 @@ mongodb+srv://Abc12345:<password>@devconnector-iiww1.mongodb.net/test?retryWrite
 
 ![image-20200428012029719](./react-mern.assets/image-20200428012029719.png)  
 
-Back và ấn collection 
+Back và ấn collection ở màn hình cluster
 
 ![image-20200428012107943](./react-mern.assets/image-20200428012107943.png)  
 
-
+using mongose
 
 ### 2. Install Dependencies & Basic Express Setup
+
+.gitignore
+
+```txt
+/node_modules
+package-lock.json
+```
+
+```shell
+npm init -y
+# nhập entry point là server.js
+
+```
+
+package.json
+
+```js
+{
+  "name": "devconnector",
+  "version": "1.0.0",
+  "description": "Social network for developers",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "server": "nodemon server.js"
+  },
+  "author": "Brad Traversy",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.2",
+    "config": "^3.3.1",
+    "express": "^4.17.1",
+    "express-validator": "^6.4.1",
+    "gravatar": "^1.8.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.9.11",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "request": "^2.88.2",
+    "validator": "^9.4.1"
+  },
+  "devDependencies": {
+    "concurrently": "^5.2.0",
+    "nodemon": "^1.19.4"
+  }
+}
+
+
+```
+
+We're going to **becrypt** J.S. which is used for password encryption.
+
+You never want to store plain plain text passwords in your database.
+We're gonna use a package called **config** for global variables.
+
+We're going to use grab a star for profile avatars how that works is if a user signs up they can use an email that's associated with a graviton account and it will automatically show their profile image.
+
+OK we need **jsonwebtoken** because we're using JWT to pass along a token for validation.
+
+We'll be doing that stuff much later but I want to get this stuff installed now.
+We're also using **Mongoose** which is a layer that sits on top of the database so we can interact with it.
+
+We need **request** which is just a small module that will allow us to make recall HDP requests to another API.
+And the reason wearing stalling this is for get hub repositories.
+
+We want our profiles to be able to have GitHub repositories listed on them.
+So we're going to make that request from our backend so that we can hide our API key and stuff like that and we can just return the repositories.
+
+we need **nodemoon** which will constantly watch our server so that we don't have to refresh it every time we make a change.
+
+And then we also want **concurrently** which is going to allow us to run our back end express server and our front end react dev server at the same time with one single command.
+
+```shell
+npm install --save bcryptjs config express express-validator gravatar jsonwebtoken mongoose request
+
+npm i -D concurrently nodemon
+npm run server
+```
+
+
+
+
+
 ### 3. Connecting To MongoDB With Mongoose
+
+
+
 ### 4. Route Files With Express Router
+
+
+
 ## 3. User API Routes & JWT Authentication
 ### 1. Creating The User Model
 ### 2. Request & Body Validation
