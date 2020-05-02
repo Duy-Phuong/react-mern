@@ -37,7 +37,7 @@ Install angular cli
 
 ### 2. A Look At The Course Project
 
-
+https://www.udemy.com/course/mern-stack-front-to-back/
 
 ### 3. Environment & Setup
 
@@ -200,11 +200,93 @@ npm i -D concurrently nodemon
 npm run server
 ```
 
+server.js
+
+```js
+const express = require('express');
+
+const app = express();
+
+// Use Routes
+app.use('/', (req, res) => res.send('Api running'));
+
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+```
+
 
 
 
 
 ### 3. Connecting To MongoDB With Mongoose
+
+config/default.json
+
+```json
+{
+  "mongoURI": "mongodb+srv://Abc12345:Abc12345@devconnector-iiww1.mongodb.net/test?retryWrites=true&w=majority"
+}
+
+```
+
+config/db.js
+
+```js
+const mongoose = require('mongoose');
+const config = require('config');
+const db = config.get('mongoURI');
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(db);
+    console.log('MongoBD Connected');
+  } catch (err) {
+    console.error(err.message);
+
+    // Exit wwith failure
+    process.exit(1);
+  }
+};
+
+module.exports = connectDB;
+
+```
+
+server.js
+
+```js
+const express = require('express');
+const mongoDB = require('./config/db');
+
+const app = express();
+
+// Use Routes
+app.use('/', (req, res) => res.send('Api running'));
+mongoDB(); // add
+
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+```
+
+Xuất hiện waring:
+
+![image-20200501153313391](./react-mern.assets/image-20200501153313391.png)  
+
+db.js
+
+```js
+// fix 
+await mongoose.connect(db, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true, // option
+    });
+```
+
+https://mongoosejs.com/docs/deprecations.html
 
 
 
