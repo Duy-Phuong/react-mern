@@ -564,10 +564,188 @@ db.js
 
 ### 4. Implementing JWT
 
+https://jwt.io/
 
+https://github.com/auth0/node-jsonwebtoken
+
+default.json
+
+```json
+{
+  "mongoURI": "mongodb+srv://Abc12345:Abc12345@devconnector-iiww1.mongodb.net/test?retryWrites=true&w=majority",
+  // add
+  "jwtSecret": "mysecrettoken"
+}
+
+```
+
+user.js: trước khi test xóa data
+
+```js
+// return jwt
+        // res.json({ msg: 'Users registered' });
+        const payload = {
+          user: {
+            id: user.id,
+          },
+        };
+
+        // Sign asynchronously watch in git
+        // an hour valid
+        jwt.sign(
+          payload,
+          config.get('jwtSecret'),
+          {
+            expiresIn: 360000,
+          },
+          (err, token) => {
+            if (err) throw err;
+            console.log(token);
+            res.json({ token });
+          }
+        );    
+```
+
+https://jwt.io/#debugger-io
+
+copy token return vào đây để decode
+
+![image-20200502152803559](./react-mern.assets/image-20200502152803559.png)
 
 ### 5. Custom Auth Middleware & JWT Verify
+
+create folder middleware/auth.js
+
+```js
+const jwt = require('jsonwebtoken');
+const config = require('config');
+
+module.exports = function (req, res, next) {
+  // get token from header
+  const token = req.header('x-auth-token');
+
+  // check if not token
+  if (!token) {
+    return res.status(401).json({ msg: 'No token, authorization denied ' });
+  }
+
+  // Verify token
+  try {
+    const decode = jwt.verify(token, config.get('jwtSecret'));
+
+    req.user = decode.user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ msg: 'Token is not valid' });
+  }
+};
+
+```
+
+auth.js
+
+```js
+const express = require('express');
+const router = express.Router();
+const auth = require('../../middleware/auth');
+const User = require('../../models/User');
+
+// @route   GET api/auth
+// @desc    Tests auth route
+// @access  Public
+router.get('/test', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json(user);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+module.exports = router;
+
+```
+
+![image-20200502162013841](./react-mern.assets/image-20200502162013841.png)
+
 ### 6. User Authentication  Login Route
+
+auth.js
+
+```js
+
+// @route   Post api/auth
+// @desc    Authenticate user and get token
+// @access  Public
+router.post(
+  '/test',
+  [
+    // username must be an email
+    check('email', 'Please input an valid email').isEmail(),
+    // password must be at least 5 chars long
+    check('password', 'Password is required').exists(),
+  ],
+  async (req, res) => {
+    // console.log(req.body);
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      let user = await User.findOne({ email });
+      if (!user) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'Invalid Credentials!' }] });
+      } else {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          return res
+            .status(400)
+            .json({ errors: [{ msg: 'Invalid Credentials!' }] });
+        }
+        // return jwt
+        const payload = {
+          user: {
+            id: user.id,
+          },
+        };
+
+        // Sign asynchronously watch in git
+        // an hour valid
+        jwt.sign(
+          payload,
+          config.get('jwtSecret'),
+          {
+            expiresIn: 360000,
+          },
+          (err, token) => {
+            if (err) throw err;
+            console.log(token);
+            res.json({ token });
+          }
+        );
+      }
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
+```
+
+
+
+
+
+![image-20200502170950516](./react-mern.assets/image-20200502170950516.png)
+
 ## 4. Profile API Routes
 ### 1. Creating The Profile Model
 ### 2. Get Current User Profile
