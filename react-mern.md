@@ -292,13 +292,280 @@ https://mongoosejs.com/docs/deprecations.html
 
 ### 4. Route Files With Express Router
 
+Create folder routes/api
 
+users.js
+
+```js
+const express = require('express');
+const router = express.Router();
+
+// @route   GET api/users
+// @desc    Tests users route
+// @access  Public
+router.get('/test', (req, res) => res.json({ msg: 'Users Works' }));
+
+module.exports = router;
+
+```
+
+server.js
+
+```js
+// add
+const express = require('express');
+const mongoDB = require('./config/db');
+
+const users = require('./routes/api/users');
+const profile = require('./routes/api/profile');
+const posts = require('./routes/api/posts');
+const auth = require('./routes/api/auth');
+
+const app = express();
+mongoDB();
+
+// Use Routes
+app.get('/', (req, res) => res.send('Api running'));
+
+// Use Routes
+app.use('/api/users', users);
+app.use('/api/profile', profile);
+app.use('/api/posts', posts);
+app.use('/api/auth', auth);
+
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+
+```
+
+npm run server
 
 ## 3. User API Routes & JWT Authentication
 ### 1. Creating The User Model
+
+models/User.js
+
+```js
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+// Create Schema
+const UserSchema = new Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  avatar: {
+    type: String
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = User = mongoose.model('users', UserSchema);
+
+```
+
+
+
 ### 2. Request & Body Validation
+
+https://express-validator.github.io/docs/
+
+server.js
+
+```js
+
+// Init middleware
+app.use(express.json({ extended: false }));
+```
+
+user.js
+
+```js
+const express = require('express');
+const router = express.Router();
+
+// @route   POST api/users
+// @desc    Tests users route
+// @access  Public
+router.post('/test', (req, res) => {
+  console.log(req.body); // phải init mới access
+  res.json({ msg: 'Users Works' });
+});
+
+module.exports = router;
+
+```
+
+Nhớ chọn header
+
+![image-20200502085248151](./react-mern.assets/image-20200502085248151.png)  
+
+Xác định content type là application/json
+
+http://localhost:5000/api/users/test
+
+gọi api post để test
+
+user.js
+
+```js
+const express = require('express');
+const router = express.Router();
+// add
+const { check, validationResult } = require('express-validator');
+
+// @route   GET api/users
+// @desc    Tests users route
+// @access  Public
+router.post(
+  '/test',
+  [
+    check('name', 'name is required').not().isEmpty(),
+    // username must be an email
+    check('email', 'Please input an valid email').isEmail(),
+    // password must be at least 5 chars long
+    check('password', 'Please enter a password > 6').isLength({ min: 6 }),
+  ],
+  (req, res) => {
+    // console.log(req.body);
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    res.json({ msg: 'Users Works' });
+  }
+);
+
+module.exports = router;
+
+```
+
+![image-20200502091512711](./react-mern.assets/image-20200502091512711.png)
+
 ### 3. User Registration
+
+user.js
+
+```js
+const express = require('express');
+const router = express.Router();
+const { check, validationResult } = require('express-validator');
+// add
+const gravatar = require('gravatar');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// Load User model
+const User = require('../../models/User');
+
+// @route   GET api/users
+// @desc    Tests users route
+// @access  Public
+router.post(
+  '/test',
+  [
+    check('name', 'name is required').not().isEmpty(),
+    // username must be an email
+    check('email', 'Please input an valid email').isEmail(),
+    // password must be at least 5 chars long
+    check('password', 'Please enter a password > 6').isLength({ min: 6 }),
+  ],
+  async (req, res) => {
+    console.log(req.body);
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // add
+    const { name, email, password } = req.body;
+
+    try {
+      let user = await User.findOne({ email });
+      if (user) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'User already exists!' }] });
+      } else {
+        // Get user gravatar
+        const avatar = gravatar.url(req.body.email, {
+          s: '200', // Size
+          r: 'pg', // Rating
+          d: 'mm', // Default
+        });
+
+        const user = new User({
+          name,
+          email,
+          avatar,
+          password,
+        });
+
+        // encrypt passwword
+        const salt = await bcrypt.genSalt(10);
+        // recommend is 10
+        user.password = await bcrypt.hash(password, salt);
+        await user.save();
+        // return jwt
+        res.json({ msg: 'Users registered' });
+      }
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
+module.exports = router;
+
+
+
+
+```
+
+db.js
+
+```js
+ try {
+    await mongoose.connect(db, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true, // thêm để xóa warning
+    });
+    console.log('MongoBD Connected');
+```
+
+![image-20200502100731435](./react-mern.assets/image-20200502100731435.png)  
+
+![image-20200502100923787](./react-mern.assets/image-20200502100923787.png)  
+
+Ấn vào collection
+
+![image-20200502101024776](./react-mern.assets/image-20200502101024776.png)  
+
+
+
 ### 4. Implementing JWT
+
+
+
 ### 5. Custom Auth Middleware & JWT Verify
 ### 6. User Authentication  Login Route
 ## 4. Profile API Routes
