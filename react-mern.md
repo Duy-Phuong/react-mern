@@ -742,15 +742,331 @@ router.post(
 
 
 
-
+Header: content type: application/json
 
 ![image-20200502170950516](./react-mern.assets/image-20200502170950516.png)
 
 ## 4. Profile API Routes
 ### 1. Creating The Profile Model
+
+Profile.js
+
+```js
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+// Create Schema
+const ProfileSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
+  handle: {
+    type: String,
+    required: true,
+    max: 40
+  },
+  company: {
+    type: String
+  },
+  website: {
+    type: String
+  },
+  location: {
+    type: String
+  },
+  status: {
+    type: String,
+    required: true
+  },
+  skills: {
+    type: [String],
+    required: true
+  },
+  bio: {
+    type: String
+  },
+  githubusername: {
+    type: String
+  },
+  experience: [
+    {
+      title: {
+        type: String,
+        required: true
+      },
+      company: {
+        type: String,
+        required: true
+      },
+      location: {
+        type: String
+      },
+      from: {
+        type: Date,
+        required: true
+      },
+      to: {
+        type: Date
+      },
+      current: {
+        type: Boolean,
+        default: false
+      },
+      description: {
+        type: String
+      }
+    }
+  ],
+  education: [
+    {
+      school: {
+        type: String,
+        required: true
+      },
+      degree: {
+        type: String,
+        required: true
+      },
+      fieldofstudy: {
+        type: String,
+        required: true
+      },
+      from: {
+        type: Date,
+        required: true
+      },
+      to: {
+        type: Date
+      },
+      current: {
+        type: Boolean,
+        default: false
+      },
+      description: {
+        type: String
+      }
+    }
+  ],
+  social: {
+    youtube: {
+      type: String
+    },
+    twitter: {
+      type: String
+    },
+    facebook: {
+      type: String
+    },
+    linkedin: {
+      type: String
+    },
+    instagram: {
+      type: String
+    }
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = Profile = mongoose.model('profile', ProfileSchema);
+
+```
+
+
+
 ### 2. Get Current User Profile
+
+profile.js
+
+```js
+const express = require('express');
+const router = express.Router();
+
+// Load Profile Model
+const Profile = require('../../models/Profile');
+// Load User Model
+const User = require('../../models/User');
+const auth = require('../../middleware/auth');
+
+// @route   GET api/profile
+// @desc    Tests profile route
+// @access  Public
+router.get('/test', auth, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.user.id,
+    }).populate('user', ['name', 'avatar']);
+    if (!profile) {
+      res.status(404).json({ profile: 'There are no profiles' });
+    }
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send('Server err');
+  }
+});
+
+module.exports = router;
+
+```
+
+![image-20200502174651322](./react-mern.assets/image-20200502174651322.png)
+
 ### 3. Create & Update Profile Routes
+
+#### Add header token in postman
+
+Ấn vào preset/ manage preset
+
+![image-20200502181109334](./react-mern.assets/image-20200502181109334.png)  
+
+profile.js
+
+```js
+
+// @route   POST api/profile
+// @desc    Create or edit user profile
+// @access  Private
+router.post(
+  '/test',
+  [
+    auth,
+    check('status', 'status is required').not().isEmpty(),
+    check('skills', 'skills is required').not().isEmpty(),
+  ],
+  async (req, res) => {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      company,
+      website,
+      location,
+      bio,
+      status,
+      githubusername,
+      skills,
+      youtube,
+      facebook,
+      twitter,
+      instagram,
+      linkedin,
+    } = req.body;
+
+    // Get fields
+    const profileFields = {};
+    profileFields.user = req.user.id;
+    // if (req.body.handle) profileFields.handle = req.body.handle;
+    if (req.body.company) profileFields.company = req.body.company;
+    if (req.body.website) profileFields.website = req.body.website;
+    if (req.body.location) profileFields.location = req.body.location;
+    if (req.body.bio) profileFields.bio = req.body.bio;
+    if (req.body.status) profileFields.status = req.body.status;
+    if (req.body.githubusername)
+      profileFields.githubusername = req.body.githubusername;
+    // Skills - Spilt into array
+    if (typeof req.body.skills !== 'undefined') {
+      profileFields.skills = req.body.skills
+        .split(',')
+        .map((skill) => skill.trim());
+    }
+
+    // Social
+    profileFields.social = {};
+    if (req.body.youtube) profileFields.social.youtube = req.body.youtube;
+    if (req.body.twitter) profileFields.social.twitter = req.body.twitter;
+    if (req.body.facebook) profileFields.social.facebook = req.body.facebook;
+    if (req.body.linkedin) profileFields.social.linkedin = req.body.linkedin;
+    if (req.body.instagram) profileFields.social.instagram = req.body.instagram;
+
+    console.log(profileFields.skills);
+    res.send('Hello');
+  }
+);
+
+module.exports = router;
+
+```
+
+
+
+![image-20200502182955330](./react-mern.assets/image-20200502182955330.png)  
+
+profile.js thêm
+
+```js
+    // console.log(profileFields.skills);
+    // res.send('Hello');
+    console.log(profileFields);
+    try {
+      let profile = await Profile.findOne({ user: req.user.id });
+      if (profile) {
+        console.log('update profile');
+        // Update
+        profile = await Profile.findOneAndUpdate(
+          { user: req.user.id },
+          { $set: profileFields },
+          { new: true }
+        );
+        return res.json(profile);
+      }
+
+      // Save Profile
+      profile = new Profile(profileFields);
+      console.log('---create profile----');
+
+      await profile.save();
+      return res.json(profile);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+```
+
+data
+
+```json
+{
+	"company": "FJN",
+	"status": "Developer",
+	"website": "abc",
+	"skills": "Java, react",
+	"location": "Hanoi",
+     "bio": "bio",
+     "githubusername": "Duy Phuong",
+     "youtube": "youtube link",
+     "facebook": "facebook link",
+     "twitter": "twitter link",
+     "instagram": "instagram link",
+     "linkedin": "linkedin link"
+}
+```
+
+![image-20200503104431830](./react-mern.assets/image-20200503104431830.png)  
+
+db.js
+
+```js
+await mongoose.connect(db, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false, // add
+    });
+    console.log('MongoBD Connected');
+```
+
+
+
 ### 4. Get All Profiles & Profile By User ID
+
+
+
 ### 5. Delete Profile & User
 ### 6. Add Profile Experience
 ### 7. Delete Profile Experience
