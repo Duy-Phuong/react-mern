@@ -1218,15 +1218,333 @@ data
 
 ### 7. Delete Profile Experience
 
+```js
 
+// @route   DELETE api/profile
+// @desc    Delete user and profile
+// @access  Private
+router.delete('/experience/:exp_id', auth, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user.id });
+
+    // Get removed index
+    const removeIndex = profile.experience
+      .map((item) => item.id)
+      .indexOf(req.params.exp_id);
+
+    profile.experience.splice(removeIndex, 1);
+
+    await profile.save();
+
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+```
+
+http://localhost:5000/api/profile/experience/5eae6d6e1ee9c63ffc1c11de
+
+![image-20200503141318484](./react-mern.assets/image-20200503141318484.png)
 
 ### 8. Add & Delete Profile Education
+
+```js
+
+// @route   PUT api/profile
+// @desc    Add profile education
+// @access  Private
+router.put(
+  '/education',
+  [
+    auth,
+    check('school', 'school is required').not().isEmpty(),
+    check('degree', 'degree is required').not().isEmpty(),
+    check('from', 'from is required').not().isEmpty(),
+    check('fieldofstudy', 'fieldofstudy is required').not().isEmpty(),
+  ],
+  async (req, res) => {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      school,
+      degree,
+      fieldofstudy,
+      from,
+      to,
+      current,
+      description,
+    } = req.body;
+
+    const newEdu = {
+      school,
+      degree,
+      fieldofstudy,
+      from,
+      to,
+      current,
+      description,
+    };
+
+    try {
+      const profile = await Profile.findOne({ user: req.user.id });
+      profile.education.unshift(newEdu);
+      await profile.save();
+      res.json(profile);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+
+// @route   DELETE api/profile
+// @desc    Delete education
+// @access  Private
+router.delete('/education/:exp_id', auth, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user.id });
+
+    // Get removed index
+    const removeIndex = profile.education
+      .map((item) => item.id)
+      .indexOf(req.params.exp_id);
+
+    profile.education.splice(removeIndex, 1);
+
+    await profile.save();
+
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+```
+
+data
+
+```js
+{
+      "school": "NBK 2",
+      "degree": "AB",
+      "fieldofstudy": "It",
+      "from": "8-10-2010",
+      "current": true,
+      "description":"Developer"
+	
+}
+```
+
+
+
 ### 9. Get Github Repos For Profile
+
+https://github.com/settings/developers
+
+Create Oath github
+
+Xem sau
+
 ## 5. Post API Routes
 ### 1. Creating The Post Model
+
+Post.js create model
+
+```js
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const PostSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String
+  },
+  avatar: {
+    type: String
+  },
+  likes: [
+    {
+      user: {
+        type: Schema.Types.ObjectId
+      }
+    }
+  ],
+  comments: [
+    {
+      user: {
+        type: Schema.Types.ObjectId
+      },
+      text: {
+        type: String,
+        required: true
+      },
+      name: {
+        type: String
+      },
+      avatar: {
+        type: String
+      },
+      date: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('post', PostSchema);
+```
+
+
+
 ### 2. Add Post Route
+
+post.js
+
+```js
+
+// @route    POST api/posts
+// @desc     Create a post
+// @access   Private
+router.post(
+  '/',
+  [auth, [check('text', 'Text is required').not().isEmpty()]],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const user = await User.findById(req.user.id).select('-password');
+
+      const newPost = new Post({
+        text: req.body.text,
+        name: user.name,
+        avatar: user.avatar,
+        user: req.user.id,
+      });
+
+      const post = await newPost.save();
+
+      res.json(post);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+```
+
+https://www.lipsum.com/
+
+![image-20200503161012537](./react-mern.assets/image-20200503161012537.png)
+
 ### 3. Get & Delete Post Routes
+
+post.js
+
+```js
+
+// @route    GET api/posts
+// @desc     Get all posts
+// @access   Private
+router.get('/', auth, async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ date: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+```
+
+
+
+![image-20200503162753593](./react-mern.assets/image-20200503162753593.png)  
+
+
+
+```js
+
+// @route    GET api/posts/:id
+// @desc     Get post by ID
+// @access   Private
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ msg: 'Post not found' });
+    }
+    res.json(post);
+  } catch (err) {
+    console.error(err.message);
+    // if (err.kind === 'ObjectId') {
+    if (err.name == 'CastError') {
+      return res.status(404).json({ msg: 'Post not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+```
+
+http://localhost:5000/api/posts/5eae8c47b0e9ed02e8687052
+
+```js
+
+// @route    DELETE api/posts/:id
+// @desc     Delete a post
+// @access   Private
+router.delete('/:id', [auth], async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ msg: 'Post not found' });
+    }
+    // Check user
+    if (post.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    await post.remove();
+
+    res.json({ msg: 'Post removed' });
+  } catch (err) {
+    console.error(err.message);
+    // if (err.kind === 'ObjectId') {
+    if (err.name == 'CastError') {
+      return res.status(404).json({ msg: 'Post not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+```
+
+
+
 ### 4. Post Like & Unlike Routes
+
+
+
 ### 5. Add & Remove Comment Routes
 ## 6. Getting Started With React & The Frontend
 ### 1. A Look At The The UI  Theme
