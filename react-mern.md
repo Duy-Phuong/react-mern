@@ -1696,6 +1696,11 @@ router.delete('/comment/:id/:comment_id', auth, async (req, res) => {
 ## 6. Getting Started With React & The Frontend
 ### 1. A Look At The The UI  Theme
 ### 2. Link To Theme Building Series On YouTube.html
+
+If you are interested in building the theme from scratch using HTML/CSS/Sass, I have a 4 part series on YouTube:
+
+https://www.youtube.com/watch?v=IFM9hbapeA0&list=PLillGF-Rfqba3xeEvDzIcUCxwMlGiewfV
+
 ### 3. React & Concurrently Setup
 ### 4. Clean Up & Initial Components
 ### 5. React Router Setup
