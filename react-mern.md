@@ -1065,11 +1065,161 @@ await mongoose.connect(db, {
 
 ### 4. Get All Profiles & Profile By User ID
 
+http://localhost:5000/api/profile/all
+
+```js
+
+// @route   GET api/profile/all
+// @desc    Get all profiles
+// @access  Public
+router.get('/all', async (req, res) => {
+  try {
+    const profile = await Profile.find().populate('user', ['name', 'avatar']);
+    if (!profile) {
+      res.status(404).json({ profile: 'There are no profiles' });
+    }
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+```
+
+http://localhost:5000/api/profile/user/5eae51c5bd9dcf4c9482de46
+
+```js
+// @route   GET api/profile/user/:user_id
+// @desc    Get profile by user ID
+// @access  Public
+
+router.get('/user/:user_id', async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.params.user_id,
+    }).populate('user', ['name', 'avatar']);
+    if (!profile) {
+      return res.status(400).json({ msg: 'There is no profile for this user' });
+    }
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    console.log(err);
+    // if (err.kind == 'ObjectId') {
+    if (err.name == 'CastError') {
+      return res.status(400).json({ msg: 'Profile not found' });
+    }
+    res.status(500).send('Server error');
+  }
+});
+```
+
 
 
 ### 5. Delete Profile & User
+
+profile
+
+```js
+
+// @route   DELETE api/profile
+// @desc    Delete user and profile
+// @access  Private
+router.delete('/', auth, async (req, res) => {
+  try {
+    await Profile.findOneAndRemove({ user: req.user.id });
+    await User.findOneAndRemove({ _id: req.user.id });
+    res.json({ msg: 'User deleted' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+```
+
+thêm vào header token
+
 ### 6. Add Profile Experience
+
+Phương thức unshift sẽ thêm một hoặc nhiều phần tử vào đầu mảng. Phương thức sẽ trả về chiều dài của mảng sau khi thêm phần tử.
+
+Phương thức này sẽ làm thay đổi chiều dài ban đầu của mảng.
+
+Nếu bạn muốn thêm phần tử vào cuối mảng, sử dụng phương thức push.
+
+```js
+
+// @route   PUT api/profile
+// @desc    Add profile experience
+// @access  Private
+router.put(
+  '/experience',
+  [
+    auth,
+    check('title', 'Title is required').not().isEmpty(),
+    check('company', 'Company is required').not().isEmpty(),
+    check('from', 'From is required').not().isEmpty(),
+  ],
+  async (req, res) => {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      company,
+      title,
+      location,
+      from,
+      to,
+      current,
+      description,
+    } = req.body;
+
+    const newExp = {
+      title,
+      company,
+      location,
+      from,
+      to,
+      current,
+      description,
+    };
+
+    try {
+      const profile = await Profile.findOne({ user: req.user.id });
+      profile.experience.unshift(newExp);
+      await profile.save();
+      res.json(profile);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server error');
+    }
+  }
+);
+```
+
+data
+
+```js
+{
+      "title": "title 1",
+      "company": "rk",
+      "location": "Ha noi 1",
+      "from": "8-10-2010",
+      "current": true,
+      "description":"Developer"
+	
+}
+```
+
+![image-20200503140239303](./react-mern.assets/image-20200503140239303.png)
+
 ### 7. Delete Profile Experience
+
+
+
 ### 8. Add & Delete Profile Education
 ### 9. Get Github Repos For Profile
 ## 5. Post API Routes
