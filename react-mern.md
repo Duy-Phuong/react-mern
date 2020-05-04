@@ -1915,7 +1915,8 @@ const Login = () => {
   const { email, password } = formData;
   const isAuthenticated = false;
 
-  const onChange = (e) => console.log('onChange');
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -1963,6 +1964,7 @@ const Login = () => {
 };
 
 export default Login;
+
 ```
 
 Register
@@ -1989,9 +1991,9 @@ const Register = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
-      console.log('setAlert');
+      console.log('password is not match');
     } else {
-      console.log('register');
+      console.log(formData);
     }
   };
 
@@ -2059,10 +2061,38 @@ export default Register;
 
 ```
 
-
-
 ### 6. Register Form & useState Hook
 ### 7. Request Example & Login Form
+
+Register.js
+
+```js
+const onSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== password2) {
+      console.log('password is not match');
+    } else {
+      // console.log(formData);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const body = JSON.stringify({ name, email, password });
+
+      try {
+        const res = await axios.post('/api/users', body, config);
+        console.log(res.data);
+      } catch (err) {
+        console.error(err.response);
+      }
+    }
+  };
+```
+
+![image-20200504085804089](./react-mern.assets/image-20200504085804089.png)
+
 ## 7. Redux Setup & Alerts
 ### 1. The Gist Of Redux
 ### 2. Creating a Redux Store
