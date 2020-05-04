@@ -2299,7 +2299,223 @@ App.js
 
 ## 8. React User Authentication
 ### 1. Auth Reducer & Register Action
+
+reducers/auth.js
+
+```js
+import {
+  REGISTER_SUCCESS,
+  REGISTER_FAIL,
+  USER_LOADED,
+  AUTH_ERROR,
+  LOGIN_SUCCESS,
+  //LOGIN_FAIL,
+  LOGOUT,
+  ACCOUNT_DELETED
+} from '../actions/types';
+
+const initialState = {
+  token: localStorage.getItem('token'),
+  isAuthenticated: null,
+  loading: true,
+  user: null
+};
+
+export default function (state = initialState, action) {
+  const { type, payload } = action;
+
+  switch (type) {
+    case REGISTER_SUCCESS:
+      localStorage.setItem('token', payload.token);
+      return {
+        ...state,
+        ...payload,
+        isAuthenticated: true,
+        loading: false,
+      };
+    case REGISTER_FAIL:
+      localStorage.removeItem('token');
+      return {
+        ...state,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+      };
+    default:
+      return state;
+  }
+}
+
+```
+
+actions/auth.js
+
+```js
+import axios from 'axios';
+import { setAlert } from './alert';
+import {
+  REGISTER_SUCCESS,
+  REGISTER_FAIL,
+  USER_LOADED,
+  AUTH_ERROR,
+  LOGIN_SUCCESS,
+  LOGIN_FAIL,
+  LOGOUT,
+  CLEAR_PROFILE
+} from './types';
+
+// Register User
+export const register = ({ name, email, password }) => async (dispatch) => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({ name, email, password });
+
+  try {
+    const res = await axios.post('/api/users', body, config);
+
+    dispatch({
+      type: REGISTER_SUCCESS,
+      payload: res.data
+    });
+//    dispatch(loadUser());
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach((error) => dispatch(setAlert(error.msg, 'danger')));
+    }
+
+    dispatch({
+      type: REGISTER_FAIL
+    });
+  }
+};
+
+
+```
+
+Register.js
+
+```js
+const Register = ({ setAlert, register }) => {
+
+...
+
+if (password !== password2) {
+      setAlert('Passwords do not match', 'danger');
+    } else {
+        // add
+      register({ name, email, password });
+    }
+    
+export default connect(null, { setAlert, register })(Register);
+
+```
+
+![image-20200504160955695](./react-mern.assets/image-20200504160955695.png)  
+
+index.js
+
+```js
+import { combineReducers } from 'redux';
+import alert from './alert';
+import auth from './auth';
+import profile from './profile';
+import post from './post';
+
+export default combineReducers({
+  alert,
+  auth, // add
+  profile,
+  post
+});
+
+```
+
+![image-20200504161712301](./react-mern.assets/image-20200504161712301.png)  
+
+Khi đăng kí success isAuthenticated vẫn là null vì using jwt is stateless 
+
 ### 2. Load User & Set Auth Token
+
+actions/auth.js
+
+```js
+import setAuthToken from '../utils/setAuthToken';
+
+// Load User
+export const loadUser = () => async (dispatch) => {
+  if (localStorage.token) {
+    setAuthToken(localStorage.token);
+  }
+  try {
+    const res = await axios.get('/api/auth');
+
+    dispatch({
+      type: USER_LOADED,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: AUTH_ERROR
+    });
+  }
+};
+```
+
+utils/setAuthToken
+
+```js
+import axios from 'axios';
+
+const setAuthToken = token => {
+  if (token) {
+    axios.defaults.headers.common['x-auth-token'] = token;
+    localStorage.setItem('token', token);
+  } else {
+    delete axios.defaults.headers.common['x-auth-token'];
+    localStorage.removeItem('token');
+  }
+};
+
+export default setAuthToken;
+
+```
+
+reducer/auth.js
+
+```js
+	// add
+	case USER_LOADED:
+      return {
+        ...state,
+        isAuthenticated: true,
+        loading: false,
+        user: payload,
+      };
+    case AUTH_ERROR:
+```
+
+App.js
+
+```js
+import setAuthToken from '../src/utils/setAuthToken';
+import { loadUser } from './actions/auth';
+
+const App = () => {
+  useEffect(() => {
+    setAuthToken(localStorage.token);
+    store.dispatch(loadUser());
+  }, []);
+
+```
+
+![image-20200504173304415](./react-mern.assets/image-20200504173304415.png)
+
 ### 3. User Login
 ### 4. Logout & Navbar Links
 ## 9. Dashboard & Profile Management
