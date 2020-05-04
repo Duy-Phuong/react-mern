@@ -1702,8 +1702,365 @@ If you are interested in building the theme from scratch using HTML/CSS/Sass, I 
 https://www.youtube.com/watch?v=IFM9hbapeA0&list=PLillGF-Rfqba3xeEvDzIcUCxwMlGiewfV
 
 ### 3. React & Concurrently Setup
+
+`create-react-app client`
+
+package.json
+
+```js
+"client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
+```
+
+```shell
+npm run dev 
+# để chạy cả 2
+cd client
+npm i --save react-redux react-router-dom axios redux redux-thunk redux-devtools-extension moment react-moment
+```
+
+Delete 2 file .gitignore và README.md
+
+client/package.json
+
+```js
+  "proxy": "http://localhost:5000"
+// thêm ở cuối
+```
+
+Xóa index.css, logo, service, app.test.js
+
+index.js
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+```
+
+App.js
+
+```js
+import React from 'react';
+import './App.css';
+
+function App() {
+  return (
+    <React.Fragment>
+      <h1>App</h1>
+    </React.Fragment>
+  );
+}
+
+export default App;
+
+```
+
+Copy all styles.css to App.css
+
+Sau đó sửa lại đường dẫn đến img trong css file
+
+https://fontawesome.com/
+
+![image-20200503222528984](./react-mern.assets/image-20200503222528984.png)  
+
+Chọn start for free và copy link paste vào index.html
+
+```html
+<head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    
+    // add
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+      integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf"
+      crossorigin="anonymous"
+    />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Welcome To DevConnector</title>
+  </head>
+```
+
+
+
 ### 4. Clean Up & Initial Components
+
+Copy đoạn nav trong index.html paste vào NavBar.js
+
+```js
+import React, { Fragment } from 'react';
+import { Link } from 'react-router-dom';
+
+const Navbar = () => {
+  return (
+    <nav className='navbar bg-dark'>
+      <h1>
+        <a href='index.html'>
+          <i className='fas fa-code'></i> DevConnector
+        </a>
+      </h1>
+      <ul>
+        <li>
+          <Link to='/profiles'>Developers</Link>
+        </li>
+        <li>
+          <Link to='/register'>Register</Link>
+        </li>
+        <li>
+          <Link to='/login'>Login</Link>
+        </li>
+      </ul>
+    </nav>
+  );
+};
+
+export default Navbar;
+
+```
+
+Landing.js
+
+```js
+import React from 'react';
+import { Link, Redirect } from 'react-router-dom';
+
+const Landing = () => {
+  return (
+    <section className='landing'>
+      <div className='dark-overlay'>
+        <div className='landing-inner'>
+          <h1 className='x-large'>Developer Connector</h1>
+          <p className='lead'>
+            Create a developer profile/portfolio, share posts and get help from
+            other developers
+          </p>
+          <div className='buttons'>
+            <Link to='/register' className='btn btn-primary'>
+              Sign Up
+            </Link>
+            <Link to='/login' className='btn btn-light'>
+              Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Landing;
+
+```
+
+App.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Navbar from './components/layout/Navbar';
+import Landing from './components/layout/Landing';
+
+// Redux
+import './App.css';
+import Register from './components/auth/Register';
+import Login from './components/auth/Login';
+
+const App = () => {
+  useEffect(() => {}, []);
+
+  return (
+    <Router>
+      <Fragment>
+        <Navbar />
+        <Route exact path='/' component={Landing} />
+        <div className='container'>
+          <Switch>
+            <Route exact path='/login' component={Login} />
+            <Route exact path='/register' component={Register} />
+          </Switch>
+        </div>
+      </Fragment>
+    </Router>
+  );
+};
+
+export default App;
+
+
+```
+
 ### 5. React Router Setup
+
+auth/Login 
+
+```js
+import React, { Fragment, useState } from 'react';
+import { Link, Redirect } from 'react-router-dom';
+import { connect } from 'react-redux';
+
+const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+
+  const { email, password } = formData;
+  const isAuthenticated = false;
+
+  const onChange = (e) => console.log('onChange');
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Log in');
+  };
+
+  if (isAuthenticated) {
+    return <Redirect to='/dashboard' />;
+  }
+
+  return (
+    <Fragment>
+      <h1 className='large text-primary'>Sign In</h1>
+      <p className='lead'>
+        <i className='fas fa-user' /> Sign Into Your Account
+      </p>
+      <form className='form' onSubmit={(e) => onSubmit(e)}>
+        <div className='form-group'>
+          <input
+            type='email'
+            placeholder='Email Address'
+            name='email'
+            value={email}
+            onChange={(e) => onChange(e)}
+            required
+          />
+        </div>
+        <div className='form-group'>
+          <input
+            type='password'
+            placeholder='Password'
+            name='password'
+            value={password}
+            onChange={(e) => onChange(e)}
+            minLength='6'
+          />
+        </div>
+        <input type='submit' className='btn btn-primary' value='Login' />
+      </form>
+      <p className='my-1'>
+        Don't have an account? <Link to='/register'>Sign Up</Link>
+      </p>
+    </Fragment>
+  );
+};
+
+export default Login;
+```
+
+Register
+
+```js
+import React, { Fragment, useState } from 'react';
+import { connect } from 'react-redux';
+import { Link, Redirect } from 'react-router-dom';
+
+const Register = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    password2: '',
+  });
+
+  const { name, email, password, password2 } = formData;
+  const isAuthenticated = false;
+
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== password2) {
+      console.log('setAlert');
+    } else {
+      console.log('register');
+    }
+  };
+
+  if (isAuthenticated) {
+    return <Redirect to='/dashboard' />;
+  }
+
+  return (
+    <Fragment>
+      <h1 className='large text-primary'>Sign Up</h1>
+      <p className='lead'>
+        <i className='fas fa-user' /> Create Your Account
+      </p>
+      <form className='form' onSubmit={(e) => onSubmit(e)}>
+        <div className='form-group'>
+          <input
+            type='text'
+            placeholder='Name'
+            name='name'
+            value={name}
+            onChange={(e) => onChange(e)}
+          />
+        </div>
+        <div className='form-group'>
+          <input
+            type='email'
+            placeholder='Email Address'
+            name='email'
+            value={email}
+            onChange={(e) => onChange(e)}
+          />
+          <small className='form-text'>
+            This site uses Gravatar so if you want a profile image, use a
+            Gravatar email
+          </small>
+        </div>
+        <div className='form-group'>
+          <input
+            type='password'
+            placeholder='Password'
+            name='password'
+            value={password}
+            onChange={(e) => onChange(e)}
+          />
+        </div>
+        <div className='form-group'>
+          <input
+            type='password'
+            placeholder='Confirm Password'
+            name='password2'
+            value={password2}
+            onChange={(e) => onChange(e)}
+          />
+        </div>
+        <input type='submit' className='btn btn-primary' value='Register' />
+      </form>
+      <p className='my-1'>
+        Already have an account? <Link to='/login'>Sign In</Link>
+      </p>
+    </Fragment>
+  );
+};
+
+export default Register;
+
+```
+
+
+
 ### 6. Register Form & useState Hook
 ### 7. Request Example & Login Form
 ## 7. Redux Setup & Alerts
