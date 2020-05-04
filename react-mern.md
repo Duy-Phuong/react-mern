@@ -11,6 +11,9 @@
 C:\Users\phuong\AppData\Local\Programs\Python\Python37\python.exe F:/programing/language/python/python-docs/readfile.py
 ======== name dir ========
 ## 1. Introduction
+
+![image-20200504092342339](./react-mern.assets/image-20200504092342339.png)
+
 ### 1. Welcome To The Course
 
 MEAN là Mongodb, express, angular, node js
@@ -194,7 +197,7 @@ we need **nodemoon** which will constantly watch our server so that we don't hav
 And then we also want **concurrently** which is going to allow us to run our back end express server and our front end react dev server at the same time with one single command.
 
 ```shell
-npm install --save bcryptjs config express express-validator gravatar jsonwebtoken mongoose request
+npm install --save bcryptjs config express express-validator gravatar jsonwebtoken mongoose request uuid
 
 npm i -D concurrently nodemon
 npm run server
@@ -2096,8 +2099,204 @@ const onSubmit = async (e) => {
 ## 7. Redux Setup & Alerts
 ### 1. The Gist Of Redux
 ### 2. Creating a Redux Store
+
+create file store.js
+
+```js
+import { createStore, applyMiddleware } from 'redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
+import thunk from 'redux-thunk';
+import rootReducer from './reducers';
+
+const initialState = {};
+
+const middleware = [thunk];
+
+const store = createStore(
+  rootReducer,
+  initialState,
+  composeWithDevTools(applyMiddleware(...middleware))
+);
+
+// set up a store subscription listener
+// to store the users token in localStorage
+
+store.subscribe(() => {
+  // keep track of the previous and current state to compare changes
+  let currentState = store.getState();
+  // if the token changes set the value in localStorage and axios headers
+});
+
+export default store;
+
+```
+
+App.js thêm 
+
+```js
+// Redux
+import { Provider } from 'react-redux';
+import store from './store';
+
+return (
+    <Provider store={store}>
+```
+
+reducer/index.js
+
+```js
+import { combineReducers } from 'redux';
+import alert from './alert';
+import auth from './auth';
+import profile from './profile';
+import post from './post';
+
+export default combineReducers({
+  alert,
+  auth,
+  profile,
+  post
+});
+
+```
+
+
+
 ### 3. Alert Reducer, Action & Types
+
+reducer/alert.js
+
+```js
+import { SET_ALERT, REMOVE_ALERT } from '../actions/types';
+
+const initialState = [];
+
+export default function(state = initialState, action) {
+  const { type, payload } = action;
+
+  switch (type) {
+    case SET_ALERT:
+      // add alert
+      return [...state, payload];
+    case REMOVE_ALERT:
+      return state.filter(alert => alert.id !== payload);
+    default:
+      return state;
+  }
+}
+
+```
+
+action.js
+
+```js
+import { v4 as uuidv4 } from 'uuid';
+import { SET_ALERT, REMOVE_ALERT } from './types';
+
+export const setAlert = (msg, alertType, timeout = 5000) => dispatch => {
+  const id = uuidv4();
+  dispatch({
+    type: SET_ALERT,
+    payload: { msg, alertType, id }
+  });
+
+  // setTimeout(() => dispatch({ type: REMOVE_ALERT, payload: id }), timeout);
+};
+
+```
+
+npm install uuid
+
+
+
 ### 4. Alert Component & Action Call
+
+Register.js
+
+```js
+import { setAlert } from '../../actions/alert';
+
+const Register = (props) => {
+
+const onSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== password2) {
+        // adđ
+      props.setAlert('Passwords do not match', 'danger');
+    } else {
+      console.log(formData);
+    }
+  };
+    // add
+export default connect(null, { setAlert })(Register);
+
+```
+
+Register.js
+
+```js
+
+const Register = ({ setAlert }) => { // fix
+
+const onSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== password2) {
+        // fix
+      setAlert('Passwords do not match', 'danger');
+    } else {
+      console.log(formData);
+    }
+  };
+
+// add gõ ptfr
+Register.propTypes = {
+  setAlert: PropTypes.func.isRequired,
+};
+export default connect(null, { setAlert })(Register);
+```
+
+Gõ racfp để tạo alert component
+
+```js
+import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+
+const Alert = ({ alerts }) =>
+  alerts !== null &&
+  alerts.length > 0 &&
+  alerts.map(alert => (
+    <div key={alert.id} className={`alert alert-${alert.alertType}`}>
+      {alert.msg}
+    </div>
+  ));
+
+// ptar
+Alert.propTypes = {
+  alerts: PropTypes.array.isRequired
+};
+
+const mapStateToProps = state => ({
+  alerts: state.alert
+});
+
+export default connect(mapStateToProps)(Alert);
+
+```
+
+state.alert lấy từ index.js
+
+App.js
+
+```js
+<div className='container'>
+            <Alert></Alert> // thêm
+```
+
+
+
+
+
 ## 8. React User Authentication
 ### 1. Auth Reducer & Register Action
 ### 2. Load User & Set Auth Token
