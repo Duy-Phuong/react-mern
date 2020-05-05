@@ -5457,6 +5457,32 @@ heroku open
 
 ### 2. Not Found Page & Theme Workaround
 
-======== list file ========
+NotFound
 
-Process finished with exit code 0
+```js
+import React, { Fragment } from 'react';
+
+const NotFound = () => {
+  return (
+    <Fragment>
+      <h1 className='x-large text-primary'>
+        <i className='fas fa-exclamation-triangle' /> Page Not Found
+      </h1>
+      <p className='large'>Sorry, this page does not exist</p>
+    </Fragment>
+  );
+};
+
+export default NotFound;
+
+```
+
+Routes.js
+
+```js
+<PrivateRoute exact path="/posts/:id" component={Post} />
+        <Route component={NotFound} />
+```
+
+
+
