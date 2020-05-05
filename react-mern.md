@@ -4009,21 +4009,603 @@ api/profile
 
 ### 1. Finish Profile Actions & Reducer
 
+profile.js
+
+```js
+
+// Get all profiles
+export const getProfiles = () => async dispatch => {
+  dispatch({ type: CLEAR_PROFILE });
+
+  try {
+    const res = await axios.get('/api/profile');
+
+    dispatch({
+      type: GET_PROFILES,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Get profile by ID
+export const getProfileById = userId => async dispatch => {
+  try {
+    const res = await axios.get(`/api/profile/user/${userId}`);
+
+    dispatch({
+      type: GET_PROFILE,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+
+// Get Github repos
+export const getGithubRepos = username => async dispatch => {
+  try {
+    const res = await axios.get(`/api/profile/github/${username}`);
+
+    dispatch({
+      type: GET_REPOS,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: NO_REPOS
+    });
+  }
+};
+
+```
+
+reducer/profile.js
+
+```js
+case GET_PROFILES:
+      return {
+        ...state,
+        profiles: payload,
+        loading: false,
+      };
+    case GET_REPOS:
+      return {
+        ...state,
+        repos: payload,
+        loading: false,
+      };
+    case NO_REPOS:
+      return {
+        ...state,
+        repos: [],
+      };
+    default:
+      return state;
+```
+
+
+
 ### 2. Display Profiles
+
+App.js
+
+```js
+<Route exact path='/profiles' component={Profiles} />
+              <Route exact path='/profile/:id' component={Profile} />
+```
+
+Profiles.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import Spinner from '../layout/Spinner';
+import ProfileItem from './ProfileItem';
+import { getProfiles } from '../../actions/profile';
+
+const Profiles = ({ getProfiles, profile: { profiles, loading } }) => {
+  useEffect(() => {
+    getProfiles();
+  }, [getProfiles]);
+
+  return (
+    <Fragment>
+      {loading ? (
+        <Spinner />
+      ) : (
+        <Fragment>
+          <h1 className='large text-primary'>Developers</h1>
+          <p className='lead'>
+            <i className='fab fa-connectdevelop' /> Browse and connect with
+            developers
+          </p>
+          <div className='profiles'>
+            {profiles.length > 0 ? (
+              profiles.map(profile => (
+                <ProfileItem key={profile._id} profile={profile} />
+              ))
+            ) : (
+              <h4>No profiles found...</h4>
+            )}
+          </div>
+        </Fragment>
+      )}
+    </Fragment>
+  );
+};
+
+Profiles.propTypes = {
+  getProfiles: PropTypes.func.isRequired,
+  profile: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  profile: state.profile
+});
+
+export default connect(
+  mapStateToProps,
+  { getProfiles }
+)(Profiles);
+
+```
+
+ProfileItem.js
+
+```js
+import React from 'react';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+
+const ProfileItem = ({
+  profile: {
+    user: { _id, name, avatar },
+    status,
+    company,
+    location,
+    skills
+  }
+}) => {
+  return (
+    <div className='profile bg-light'>
+      <img src={avatar} alt='' className='round-img' />
+      <div>
+        <h2>{name}</h2>
+        <p>
+          {status} {company && <span> at {company}</span>}
+        </p>
+        <p className='my-1'>{location && <span>{location}</span>}</p>
+        <Link to={`/profile/${_id}`} className='btn btn-primary'>
+          View Profile
+        </Link>
+      </div>
+      <ul>
+        {skills.slice(0, 4).map((skill, index) => (
+          <li key={index} className='text-primary'>
+            <i className='fas fa-check' /> {skill}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+ProfileItem.propTypes = {
+  profile: PropTypes.object.isRequired
+};
+
+export default ProfileItem;
+
+```
+
+NavBar.js
+
+```js
+<li>
+        <Link to='/profiles'>Developers</Link>
+      </li>
+```
+
+
 
 ### 3. Addressing The Console Warnings
 
+Xóa
+
+```js
+useEffect(() => {
+    console.log('getCurrentProfile');
+    getCurrentProfile();
+  }, [getCurrentProfile]); // thêm ở dashboard
+```
+
+làm tương tự ở Profiles, EditProfile
+
 ### 4. Starting On The Profile
+
+Profile.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import Spinner from '../layout/Spinner';
+import ProfileTop from './ProfileTop';
+import ProfileAbout from './ProfileAbout';
+import ProfileExperience from './ProfileExperience';
+import ProfileEducation from './ProfileEducation';
+import ProfileGithub from './ProfileGithub';
+import { getProfileById } from '../../actions/profile';
+
+const Profile = ({ getProfileById, profile: { profile }, auth, match }) => {
+  /*
+   use a nullProfile boolean to safely add to useEffect
+   adding profile to useEffect would trigger the function
+   as profile is an object and object's are reference types
+*/
+  const nullProfile = !profile;
+  useEffect(() => {
+    if (nullProfile) getProfileById(match.params.id);
+  }, [getProfileById, match.params.id, nullProfile]);
+
+  return (
+    <Fragment>
+      {profile === null ? (
+        <Spinner />
+      ) : (
+        <Fragment>
+          <Link to="/profiles" className="btn btn-light">
+            Back To Profiles
+          </Link>
+          {auth.isAuthenticated &&
+            auth.loading === false &&
+            auth.user._id === profile.user._id && (
+              <Link to="/edit-profile" className="btn btn-dark">
+                Edit Profile
+              </Link>
+            )}
+          <div className="profile-grid my-1">
+            <ProfileTop profile={profile} />
+            <ProfileAbout profile={profile} />
+            <div className="profile-exp bg-white p-2">
+              <h2 className="text-primary">Experience</h2>
+              {profile.experience.length > 0 ? (
+                <Fragment>
+                  {profile.experience.map((experience) => (
+                    <ProfileExperience
+                      key={experience._id}
+                      experience={experience}
+                    />
+                  ))}
+                </Fragment>
+              ) : (
+                <h4>No experience credentials</h4>
+              )}
+            </div>
+
+            <div className="profile-edu bg-white p-2">
+              <h2 className="text-primary">Education</h2>
+              {profile.education.length > 0 ? (
+                <Fragment>
+                  {profile.education.map((education) => (
+                    <ProfileEducation
+                      key={education._id}
+                      education={education}
+                    />
+                  ))}
+                </Fragment>
+              ) : (
+                <h4>No education credentials</h4>
+              )}
+            </div>
+
+            {profile.githubusername && (
+              <ProfileGithub username={profile.githubusername} />
+            )}
+          </div>
+        </Fragment>
+      )}
+    </Fragment>
+  );
+};
+
+Profile.propTypes = {
+  getProfileById: PropTypes.func.isRequired,
+  profile: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired
+};
+
+const mapStateToProps = (state) => ({
+  profile: state.profile,
+  auth: state.auth
+});
+
+export default connect(mapStateToProps, { getProfileById })(Profile);
+
+```
+
+![image-20200505161541260](./react-mern.assets/image-20200505161541260.png)
+
+![image-20200505161529116](./react-mern.assets/image-20200505161529116.png)  
+
+Đối với user nào đăng nhập rồi mới cho phép hiển thị nút edit profile
 
 ### 5. ProfileTop & ProfileAbout Components
 
+ProfileTop
+
+```js
+import React from 'react';
+import PropTypes from 'prop-types';
+
+const ProfileTop = ({
+  profile: {
+    status,
+    company,
+    location,
+    website,
+    social,
+    user: { name, avatar }
+  }
+}) => {
+  return (
+    <div className='profile-top bg-primary p-2'>
+      <img className='round-img my-1' src={avatar} alt='' />
+      <h1 className='large'>{name}</h1>
+      <p className='lead'>
+        {status} {company && <span> at {company}</span>}
+      </p>
+      <p>{location && <span>{location}</span>}</p>
+      <div className='icons my-1'>
+        {website && (
+          <a href={website} target='_blank' rel='noopener noreferrer'>
+            <i className='fas fa-globe fa-2x' />
+          </a>
+        )}
+        {social && social.twitter && (
+          <a href={social.twitter} target='_blank' rel='noopener noreferrer'>
+            <i className='fab fa-twitter fa-2x' />
+          </a>
+        )}
+        {social && social.facebook && (
+          <a href={social.facebook} target='_blank' rel='noopener noreferrer'>
+            <i className='fab fa-facebook fa-2x' />
+          </a>
+        )}
+        {social && social.linkedin && (
+          <a href={social.linkedin} target='_blank' rel='noopener noreferrer'>
+            <i className='fab fa-linkedin fa-2x' />
+          </a>
+        )}
+        {social && social.youtube && (
+          <a href={social.youtube} target='_blank' rel='noopener noreferrer'>
+            <i className='fab fa-youtube fa-2x' />
+          </a>
+        )}
+        {social && social.instagram && (
+          <a href={social.instagram} target='_blank' rel='noopener noreferrer'>
+            <i className='fab fa-instagram fa-2x' />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
+ProfileTop.propTypes = {
+  profile: PropTypes.object.isRequired
+};
+
+export default ProfileTop;
+
+```
+
+ProfileAbout
+
+```js
+import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
+
+const ProfileAbout = ({
+  profile: {
+    bio,
+    skills,
+    user: { name }
+  }
+}) => (
+  <div className='profile-about bg-light p-2'>
+    {bio && (
+      <Fragment>
+        <h2 className='text-primary'>{name.trim().split(' ')[0]}s Bio</h2>
+        <p>{bio}</p>
+        <div className='line' />
+      </Fragment>
+    )}
+    <h2 className='text-primary'>Skill Set</h2>
+    <div className='skills'>
+      {skills.map((skill, index) => (
+        <div key={index} className='p-1'>
+          <i className='fas fa-check' /> {skill}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+ProfileAbout.propTypes = {
+  profile: PropTypes.object.isRequired
+};
+
+export default ProfileAbout;
+
+```
+
+
+
 ### 6. Profile Experience & Education Display
 
+ProfileExperience
+
+```js
+import React from 'react';
+import PropTypes from 'prop-types';
+import Moment from 'react-moment';
+import moment from 'moment';
+
+const ProfileExperience = ({
+  experience: { company, title, location, current, to, from, description }
+}) => (
+  <div>
+    <h3 className="text-dark">{company}</h3>
+    <p>
+      <Moment format="YYYY/MM/DD">{moment.utc(from)}</Moment> -{' '}
+      {!to ? ' Now' : <Moment format="YYYY/MM/DD">{moment.utc(to)}</Moment>}
+    </p>
+    <p>
+      <strong>Position: </strong> {title}
+    </p>
+    <p>
+      <strong>Location: </strong> {location}
+    </p>
+    <p>
+      <strong>Description: </strong> {description}
+    </p>
+  </div>
+);
+
+ProfileExperience.propTypes = {
+  experience: PropTypes.object.isRequired
+};
+
+export default ProfileExperience;
+
+```
+
+ProfileEducation
+
+```js
+import React from 'react';
+import PropTypes from 'prop-types';
+import Moment from 'react-moment';
+import moment from 'moment';
+
+const ProfileEducation = ({
+  education: { school, degree, fieldofstudy, current, to, from, description }
+}) => (
+  <div>
+    <h3 className="text-dark">{school}</h3>
+    <p>
+      <Moment format="YYYY/MM/DD">{moment.utc(from)}</Moment> -{' '}
+      {!to ? ' Now' : <Moment format="YYYY/MM/DD">{moment.utc(to)}</Moment>}
+    </p>
+    <p>
+      <strong>Degree: </strong> {degree}
+    </p>
+    <p>
+      <strong>Field Of Study: </strong> {fieldofstudy}
+    </p>
+    <p>
+      <strong>Description: </strong> {description}
+    </p>
+  </div>
+);
+
+ProfileEducation.propTypes = {
+  education: PropTypes.object.isRequired
+};
+
+export default ProfileEducation;
+
+```
+
+
+
 ### 7. Displaying Github Repos
+
+ProGithub
+
+```js
+import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import Spinner from '../layout/Spinner';
+import { getGithubRepos } from '../../actions/profile';
+
+const ProfileGithub = ({ username, getGithubRepos, repos }) => {
+  useEffect(() => {
+    getGithubRepos(username);
+  }, [getGithubRepos, username]);
+
+  return (
+    <div className="profile-github">
+      <h2 className="text-primary my-1">Github Repos</h2>
+      {repos === null ? (
+        <Spinner />
+      ) : (
+        repos.map(repo => (
+          <div key={repo.id} className="repo bg-white p-1 my-1">
+            <div>
+              <h4>
+                <a
+                  href={repo.html_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {repo.name}
+                </a>
+              </h4>
+              <p>{repo.description}</p>
+            </div>
+            <div>
+              <ul>
+                <li className="badge badge-primary">
+                  Stars: {repo.stargazers_count}
+                </li>
+                <li className="badge badge-dark">
+                  Watchers: {repo.watchers_count}
+                </li>
+                <li className="badge badge-light">Forks: {repo.forks_count}</li>
+              </ul>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+ProfileGithub.propTypes = {
+  getGithubRepos: PropTypes.func.isRequired,
+  repos: PropTypes.array.isRequired,
+  username: PropTypes.string.isRequired
+};
+
+const mapStateToProps = state => ({
+  repos: state.profile.repos
+});
+
+export default connect(mapStateToProps, { getGithubRepos })(ProfileGithub);
+
+```
+
+
 
 ## 11. Posts & Comments
 
 ### 1. Post Reducer, Action & Initial Component
+
+
 
 ### 2. Post Item Component
 
