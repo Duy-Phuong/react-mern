@@ -2706,10 +2706,321 @@ export default connect(
 
 ## 9. Dashboard & Profile Management
 ### 1. Protected Route For Dashboard
+
+App.js
+
+```js
+<PrivateRoute exact path='/dashboard' component={Dashboard} />
+
+```
+
+Create routing/PrivateRoute
+
+```js
+import React from 'react';
+import { Route, Redirect } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import Spinner from '../layout/Spinner';
+
+const PrivateRoute = ({
+  component: Component,
+  auth: { isAuthenticated, loading },
+  ...rest
+}) => (
+  <Route
+    {...rest}
+    render={props =>
+      loading ? (
+        <Spinner />
+      ) : isAuthenticated ? (
+        <Component {...props} />
+      ) : (
+        <Redirect to="/login" />
+      )
+    }
+  />
+);
+
+PrivateRoute.propTypes = {
+  auth: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps)(PrivateRoute);
+
+```
+
+Khi vào http://localhost:3000/dashboard thì bị đá ra
+
 ### 2. Profile Reducer & Get Current Profile
+
+thêm vào reducer index.js profile
+
+reducer/profile
+
+```js
+import {
+  GET_PROFILE,
+  PROFILE_ERROR,
+  CLEAR_PROFILE,
+  UPDATE_PROFILE,
+  GET_PROFILES,
+  GET_REPOS,
+  NO_REPOS
+} from '../actions/types';
+
+const initialState = {
+  profile: null,
+  profiles: [],
+  repos: [],
+  loading: true,
+  error: {}
+};
+
+export default function (state = initialState, action) {
+  const { type, payload } = action;
+
+  switch (type) {
+    case GET_PROFILE:
+    case UPDATE_PROFILE:
+      return {
+        ...state,
+        profile: payload,
+        loading: false
+      };
+    case GET_PROFILES:
+      return {
+        ...state,
+        profiles: payload,
+        loading: false
+      };
+    case PROFILE_ERROR:
+      return {
+        ...state,
+        error: payload,
+        loading: false,
+        profile: null
+      };
+    case CLEAR_PROFILE:
+      return {
+        ...state,
+        profile: null,
+        repos: []
+      };
+    case GET_REPOS:
+      return {
+        ...state,
+        repos: payload,
+        loading: false
+      };
+    case NO_REPOS:
+      return {
+        ...state,
+        repos: []
+      };
+    default:
+      return state;
+  }
+}
+
+```
+
+actions/profile.js
+
+```js
+import axios from 'axios';
+import { setAlert } from './alert';
+
+import {
+  GET_PROFILE,
+  GET_PROFILES,
+  PROFILE_ERROR,
+  UPDATE_PROFILE,
+  CLEAR_PROFILE,
+  ACCOUNT_DELETED,
+  GET_REPOS,
+  NO_REPOS
+} from './types';
+
+// Get current users profile
+export const getCurrentProfile = () => async dispatch => {
+  try {
+    const res = await axios.get('/api/profile/me');
+
+    dispatch({
+      type: GET_PROFILE,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Get all profiles
+export const getProfiles = () => async dispatch => {
+  dispatch({ type: CLEAR_PROFILE });
+
+  try {
+    const res = await axios.get('/api/profile');
+
+    dispatch({
+      type: GET_PROFILES,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Get profile by ID
+export const getProfileById = userId => async dispatch => {
+  try {
+    const res = await axios.get(`/api/profile/user/${userId}`);
+
+    dispatch({
+      type: GET_PROFILE,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+
+// Create or update profile
+export const createProfile = (
+  formData,
+  history,
+  edit = false
+) => async dispatch => {
+  try {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const res = await axios.post('/api/profile', formData, config);
+
+    dispatch({
+      type: GET_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert(edit ? 'Profile Updated' : 'Profile Created', 'success'));
+
+    if (!edit) {
+      history.push('/dashboard');
+    }
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+Dashboard.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+// import DashboardActions from './DashboardActions';
+// import Experience from './Experience';
+// import Education from './Education';
+import { getCurrentProfile, deleteAccount } from '../../actions/profile';
+
+const Dashboard = ({
+  getCurrentProfile,
+  deleteAccount,
+  auth: { user },
+  profile: { profile },
+}) => {
+  useEffect(() => {
+    getCurrentProfile();
+  }, [getCurrentProfile]);
+
+  return (
+    <Fragment>
+      <h1 className='large text-primary'>Dashboard</h1>
+      <p className='lead'>
+        <i className='fas fa-user' /> Welcome {user && user.name}
+      </p>
+      {profile !== null ? (
+        <Fragment>
+          <div className='my-2'>
+            <button className='btn btn-danger' onClick={() => deleteAccount()}>
+              <i className='fas fa-user-minus' /> Delete My Account
+            </button>
+          </div>
+        </Fragment>
+      ) : (
+        <Fragment>
+          <p>You have not yet setup a profile, please add some info</p>
+          <Link to='/create-profile' className='btn btn-primary my-1'>
+            Create Profile
+          </Link>
+        </Fragment>
+      )}
+    </Fragment>
+  );
+};
+
+Dashboard.propTypes = {
+  getCurrentProfile: PropTypes.func.isRequired,
+  deleteAccount: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired,
+  profile: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = (state) => ({
+  auth: state.auth,
+  profile: state.profile,
+});
+
+export default connect(mapStateToProps, { getCurrentProfile, deleteAccount })(
+  Dashboard
+);
+
+```
+
+
+
 ### 3. Starting On The Dashboard
+
+
+
 ### 4. CreateProfile Component
+
+
+
 ### 5. Create Profile Action
+
+
+
 ### 6. Edit Profile
 ### 7. Add Education & Experiences
 ### 8. List Education & Experiences
