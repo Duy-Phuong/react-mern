@@ -4605,21 +4605,741 @@ export default connect(mapStateToProps, { getGithubRepos })(ProfileGithub);
 
 ### 1. Post Reducer, Action & Initial Component
 
+reducer/post.js
+
+```js
+import {
+  GET_POSTS,
+  POST_ERROR,
+  UPDATE_LIKES,
+  DELETE_POST,
+  ADD_POST,
+  GET_POST,
+  ADD_COMMENT,
+  REMOVE_COMMENT
+} from '../actions/types';
+
+const initialState = {
+  posts: [],
+  post: null,
+  loading: true,
+  error: {}
+};
+
+export default function(state = initialState, action) {
+  const { type, payload } = action;
+
+  switch (type) {
+    case GET_POSTS:
+      return {
+        ...state,
+        posts: payload,
+        loading: false
+      };
+    case GET_POST:
+      return {
+        ...state,
+        post: payload,
+        loading: false
+      };
+    case ADD_POST:
+      return {
+        ...state,
+        posts: [payload, ...state.posts],
+        loading: false
+      };
+    case DELETE_POST:
+      return {
+        ...state,
+        posts: state.posts.filter(post => post._id !== payload),
+        loading: false
+      };
+    case POST_ERROR:
+      return {
+        ...state,
+        error: payload,
+        loading: false
+      };
+    case UPDATE_LIKES:
+      return {
+        ...state,
+        posts: state.posts.map(post =>
+          post._id === payload.id ? { ...post, likes: payload.likes } : post
+        ),
+        loading: false
+      };
+    case ADD_COMMENT:
+      return {
+        ...state,
+        post: { ...state.post, comments: payload },
+        loading: false
+      };
+    case REMOVE_COMMENT:
+      return {
+        ...state,
+        post: {
+          ...state.post,
+          comments: state.post.comments.filter(
+            comment => comment._id !== payload
+          )
+        },
+        loading: false
+      };
+    default:
+      return state;
+  }
+}
+
+```
+
+Sau đó khai báo bên trong index.js
+
+actons/post.js
+
+```js
+
+// Get posts
+export const getPosts = () => async dispatch => {
+  try {
+    const res = await axios.get('/api/posts');
+
+    dispatch({
+      type: GET_POSTS,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+```
+
+Posts.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import PostItem from './PostItem';
+import PostForm from './PostForm';
+import { getPosts } from '../../actions/post';
+
+const Posts = ({ getPosts, post: { posts } }) => {
+  useEffect(() => {
+    getPosts();
+  }, [getPosts]);
+
+  return (
+    <Fragment>
+      <h1 className="large text-primary">Posts</h1>
+      <p className="lead">
+        <i className="fas fa-user" /> Welcome to the community
+      </p>
+      <PostForm />
+      <div className="posts">
+        {posts.map((post) => (
+          <PostItem key={post._id} post={post} />
+        ))}
+      </div>
+    </Fragment>
+  );
+};
+
+Posts.propTypes = {
+  getPosts: PropTypes.func.isRequired,
+  post: PropTypes.object.isRequired
+};
+
+const mapStateToProps = (state) => ({
+  post: state.post
+});
+
+export default connect(mapStateToProps, { getPosts })(Posts);
+
+```
+
+![image-20200505165517356](./react-mern.assets/image-20200505165517356.png)  
+
+App.js
+
+```js
+<PrivateRoute exact path='/posts' component={Posts} />
+<PrivateRoute exact path='/posts/:id' component={Post} />
+```
+
 
 
 ### 2. Post Item Component
 
+PostItem.js
+
+```js
+import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import Moment from 'react-moment';
+import { connect } from 'react-redux';
+import { addLike, removeLike, deletePost } from '../../actions/post';
+
+const PostItem = ({
+  addLike,
+  removeLike,
+  deletePost,
+  auth,
+  post: { _id, text, name, avatar, user, likes, comments, date },
+  showActions,
+}) => (
+  <div className='post bg-white p-1 my-1'>
+    <div>
+      <Link to={`/profile/${user}`}>
+        <img className='round-img' src={avatar} alt='' />
+        <h4>{name}</h4>
+      </Link>
+    </div>
+    <div>
+      <p className='my-1'>{text}</p>
+      <p className='post-date'>
+        Posted on <Moment format='YYYY/MM/DD'>{date}</Moment>
+      </p>
+
+      {showActions && (
+        <Fragment>
+          <button
+            onClick={() => addLike(_id)}
+            type='button'
+            className='btn btn-light'
+          >
+            <i className='fas fa-thumbs-up' />{' '}
+            <span>Like{likes.length > 0 && <span>{likes.length}</span>}</span>
+          </button>
+          <button
+            onClick={() => removeLike(_id)}
+            type='button'
+            className='btn btn-light'
+          >
+            <i className='fas fa-thumbs-down' />
+            Unlike
+          </button>
+          <Link to={`/posts/${_id}`} className='btn btn-primary'>
+            Discussion{' '}
+            {comments.length > 0 && (
+              <span className='comment-count'>{comments.length}</span>
+            )}
+          </Link>
+          {!auth.loading && user === auth.user._id && (
+            <button
+              onClick={() => deletePost(_id)}
+              type='button'
+              className='btn btn-danger'
+            >
+              <i className='fas fa-times' />
+              Remove
+            </button>
+          )}
+        </Fragment>
+      )}
+    </div>
+  </div>
+);
+
+PostItem.defaultProps = {
+  showActions: true,
+};
+
+PostItem.propTypes = {
+  post: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+  addLike: PropTypes.func.isRequired,
+  removeLike: PropTypes.func.isRequired,
+  deletePost: PropTypes.func.isRequired,
+  showActions: PropTypes.bool,
+};
+
+const mapStateToProps = (state) => ({
+  auth: state.auth,
+});
+
+export default connect(mapStateToProps, { addLike, removeLike, deletePost })(
+  PostItem
+);
+
+```
+
+
+
 ### 3. Like & Unlike Functionality
+
+actions/post.js
+
+```js
+
+// Add like
+export const addLike = id => async dispatch => {
+  try {
+    const res = await axios.put(`/api/posts/like/${id}`);
+
+    dispatch({
+      type: UPDATE_LIKES,
+      payload: { id, likes: res.data }
+    });
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Remove like
+export const removeLike = id => async dispatch => {
+  try {
+    const res = await axios.put(`/api/posts/unlike/${id}`);
+
+    dispatch({
+      type: UPDATE_LIKES,
+      payload: { id, likes: res.data }
+    });
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+reducer/post.js
+
+```js
+case UPDATE_LIKES:
+      return {
+        ...state,
+        posts: state.posts.map(post =>
+          post._id === payload.id ? { ...post, likes: payload.likes } : post
+        ),
+        loading: false
+      };
+```
+
+
 
 ### 4. Deleting Posts
 
+reducer/post.js
+
+```js
+case DELETE_POST:
+      return {
+        ...state,
+        posts: state.posts.filter(post => post._id !== payload),
+        loading: false
+      };
+```
+
+actions/post.js
+
+```js
+
+// Delete post
+export const deletePost = id => async dispatch => {
+  try {
+    await axios.delete(`/api/posts/${id}`);
+
+    dispatch({
+      type: DELETE_POST,
+      payload: id
+    });
+
+    dispatch(setAlert('Post Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+```
+
+
+
 ### 5. Adding Posts
+
+actions/post
+
+```js
+
+// Add post
+export const addPost = formData => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  try {
+    const res = await axios.post('/api/posts', formData, config);
+
+    dispatch({
+      type: ADD_POST,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Post Created', 'success'));
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+reducer/post.js
+
+```js
+case ADD_POST:
+      return {
+        ...state,
+        posts: [payload, ...state.posts],
+        loading: false
+      };
+```
+
+PostForm.js
+
+```js
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { addPost } from '../../actions/post';
+
+const PostForm = ({ addPost }) => {
+  const [text, setText] = useState('');
+
+  return (
+    <div className='post-form'>
+      <div className='bg-primary p'>
+        <h3>Say Something...</h3>
+      </div>
+      <form
+        className='form my-1'
+        onSubmit={e => {
+          e.preventDefault();
+          addPost({ text });
+          setText('');
+        }}
+      >
+        <textarea
+          name='text'
+          cols='30'
+          rows='5'
+          placeholder='Create a post'
+          value={text}
+          onChange={e => setText(e.target.value)}
+          required
+        />
+        <input type='submit' className='btn btn-dark my-1' value='Submit' />
+      </form>
+    </div>
+  );
+};
+
+PostForm.propTypes = {
+  addPost: PropTypes.func.isRequired
+};
+
+export default connect(
+  null,
+  { addPost }
+)(PostForm);
+
+```
+
+
 
 ### 6. Single Post Display
 
+actions/post
+
+```js
+
+// Get post
+export const getPost = id => async dispatch => {
+  try {
+    const res = await axios.get(`/api/posts/${id}`);
+
+    dispatch({
+      type: GET_POST,
+      payload: res.data
+    });
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+reducer/post.js
+
+```js
+case GET_POST:
+      return {
+        ...state,
+        post: payload,
+        loading: false
+      };
+```
+
+Post.js
+
+```js
+import React, { Fragment, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import Spinner from '../layout/Spinner';
+import PostItem from '../posts/PostItem';
+import CommentForm from '../post/CommentForm';
+import CommentItem from '../post/CommentItem';
+import { getPost } from '../../actions/post';
+
+const Post = ({ getPost, post: { post, loading }, match }) => {
+  useEffect(() => {
+    getPost(match.params.id);
+  }, [getPost, match.params.id]);
+
+  return loading || post === null ? (
+    <Spinner />
+  ) : (
+    <Fragment>
+      <Link to="/posts" className="btn">
+        Back To Posts
+      </Link>
+      <PostItem post={post} showActions={false} />
+      <CommentForm postId={post._id} />
+      <div className="comments">
+        {post.comments.map((comment) => (
+          <CommentItem key={comment._id} comment={comment} postId={post._id} />
+        ))}
+      </div>
+    </Fragment>
+  );
+};
+
+Post.propTypes = {
+  getPost: PropTypes.func.isRequired,
+  post: PropTypes.object.isRequired
+};
+
+const mapStateToProps = (state) => ({
+  post: state.post
+});
+
+export default connect(mapStateToProps, { getPost })(Post);
+
+```
+
+![image-20200505173147739](./react-mern.assets/image-20200505173147739.png)
+
 ### 7. Adding Comments
 
+actions/post
+
+```js
+
+// Add comment
+export const addComment = (postId, formData) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  try {
+    const res = await axios.post(
+      `/api/posts/comment/${postId}`,
+      formData,
+      config
+    );
+
+    dispatch({
+      type: ADD_COMMENT,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Comment Added', 'success'));
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Delete comment
+export const deleteComment = (postId, commentId) => async dispatch => {
+  try {
+    await axios.delete(`/api/posts/comment/${postId}/${commentId}`);
+
+    dispatch({
+      type: REMOVE_COMMENT,
+      payload: commentId
+    });
+
+    dispatch(setAlert('Comment Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: POST_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+reducer/post
+
+```js
+case ADD_COMMENT:
+      return {
+        ...state,
+        post: { ...state.post, comments: payload },
+        loading: false
+      };
+    case REMOVE_COMMENT:
+      return {
+        ...state,
+        post: {
+          ...state.post,
+          comments: state.post.comments.filter(
+            comment => comment._id !== payload
+          )
+        },
+        loading: false
+      };
+```
+
+CommentForm.js
+
+```js
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { addComment } from '../../actions/post';
+
+const CommentForm = ({ postId, addComment }) => {
+  const [text, setText] = useState('');
+
+  return (
+    <div className='post-form'>
+      <div className='bg-primary p'>
+        <h3>Leave a Comment</h3>
+      </div>
+      <form
+        className='form my-1'
+        onSubmit={e => {
+          e.preventDefault();
+          addComment(postId, { text });
+          setText('');
+        }}
+      >
+        <textarea
+          name='text'
+          cols='30'
+          rows='5'
+          placeholder='Comment the post'
+          value={text}
+          onChange={e => setText(e.target.value)}
+          required
+        />
+        <input type='submit' className='btn btn-dark my-1' value='Submit' />
+      </form>
+    </div>
+  );
+};
+
+CommentForm.propTypes = {
+  addComment: PropTypes.func.isRequired
+};
+
+export default connect(
+  null,
+  { addComment }
+)(CommentForm);
+
+```
+
+
+
 ### 8. Comment Display & Delete
+
+CommentItem.js
+
+```js
+import React from 'react';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import Moment from 'react-moment';
+import { deleteComment } from '../../actions/post';
+
+const CommentItem = ({
+  postId,
+  comment: { _id, text, name, avatar, user, date },
+  auth,
+  deleteComment
+}) => (
+  <div className='post bg-white p-1 my-1'>
+    <div>
+      <Link to={`/profile/${user}`}>
+        <img className='round-img' src={avatar} alt='' />
+        <h4>{name}</h4>
+      </Link>
+    </div>
+    <div>
+      <p className='my-1'>{text}</p>
+      <p className='post-date'>
+        Posted on <Moment format='YYYY/MM/DD'>{date}</Moment>
+      </p>
+      {!auth.loading && user === auth.user._id && (
+        <button
+          onClick={() => deleteComment(postId, _id)}
+          type='button'
+          className='btn btn-danger'
+        >
+          <i className='fas fa-times' />
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+CommentItem.propTypes = {
+  postId: PropTypes.string.isRequired,
+  comment: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+  deleteComment: PropTypes.func.isRequired
+};
+
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(
+  mapStateToProps,
+  { deleteComment }
+)(CommentItem);
+
+```
+
+![image-20200505175319265](./react-mern.assets/image-20200505175319265.png)
 
 ## 12. Prepare & Deploy
 
