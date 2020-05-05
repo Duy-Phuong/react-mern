@@ -2961,7 +2961,7 @@ const Dashboard = ({
 }) => {
   useEffect(() => {
     getCurrentProfile();
-  }, [getCurrentProfile]);
+  }, [getCurrentProfile]); // hiện tại để []
 
   return (
     <Fragment>
@@ -3007,23 +3007,501 @@ export default connect(mapStateToProps, { getCurrentProfile, deleteAccount })(
 
 ```
 
+Sửa lại api profile
 
+![image-20200505080346323](./react-mern.assets/image-20200505080346323.png)
 
 ### 3. Starting On The Dashboard
+
+NavBAr.js
+
+```js
+<li>
+        <Link to='/dashboard'>
+          <i className='fas fa-user' />{' '}
+          <span className='hide-sm'>Dashboard</span>
+        </Link>
+      </li>
+```
+
+Landing.js
+
+```js
+import React from 'react';
+import { Link, Redirect } from 'react-router-dom';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+
+// add
+const Landing = ({ isAuthenticated }) => {
+  if (isAuthenticated) {
+    return <Redirect to='/dashboard' />;
+  }
+
+  return (
+    <section className='landing'>
+      <div className='dark-overlay'>
+        <div className='landing-inner'>
+          <h1 className='x-large'>Developer Connector</h1>
+          <p className='lead'>
+            Create a developer profile/portfolio, share posts and get help from
+            other developers
+          </p>
+          <div className='buttons'>
+            <Link to='/register' className='btn btn-primary'>
+              Sign Up
+            </Link>
+            <Link to='/login' className='btn btn-light'>
+              Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// add
+Landing.propTypes = {
+  isAuthenticated: PropTypes.bool
+};
+
+const mapStateToProps = state => ({
+  isAuthenticated: state.auth.isAuthenticated
+});
+
+export default connect(mapStateToProps)(Landing);
+
+```
+
+Nếu đã login thì redirect  to dashboard Khi ấn vào DEVCNNECTOR
+
+Thêm Spinner
+
+![image-20200505083546492](./react-mern.assets/image-20200505083546492.png)  
+
+reducer/profile.js
+
+```js
+case CLEAR_PROFILE:
+      return {
+        ...state,
+        profile: null,
+        repos: [],
+		loading: false //
+      };
+```
+
+actions/auth.js
+
+```js
+
+// Logout / Clear Profile
+export const logout = () => (dispatch) => {
+  dispatch({ type: CLEAR_PROFILE });
+  dispatch({ type: LOGOUT }); // add
+};
+```
 
 
 
 ### 4. CreateProfile Component
 
+profile-form/ProfileForm
+
+```js
+import React, { Fragment, useState, useEffect } from 'react';
+import { Link, withRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { createProfile, getCurrentProfile } from '../../actions/profile';
+
+const initialState = {
+  company: '',
+  website: '',
+  location: '',
+  status: '',
+  skills: '',
+  githubusername: '',
+  bio: '',
+  twitter: '',
+  facebook: '',
+  linkedin: '',
+  youtube: '',
+  instagram: ''
+};
+
+const ProfileForm = ({
+  profile: { profile, loading },
+  createProfile,
+  getCurrentProfile,
+  history
+}) => {
+  const [formData, setFormData] = useState(initialState);
+
+  const [displaySocialInputs, toggleSocialInputs] = useState(false);
+
+  useEffect(() => {
+    if (!profile) getCurrentProfile();
+    if (!loading && profile) {
+      const profileData = { ...initialState };
+      for (const key in profile) {
+        if (key in profileData) profileData[key] = profile[key];
+      }
+      for (const key in profile.social) {
+        if (key in profileData) profileData[key] = profile.social[key];
+      }
+      if (Array.isArray(profileData.skills))
+        profileData.skills = profileData.skills.join(', ');
+      setFormData(profileData);
+    }
+  }, [loading, getCurrentProfile, profile]);
+
+  const {
+    company,
+    website,
+    location,
+    status,
+    skills,
+    githubusername,
+    bio,
+    twitter,
+    facebook,
+    linkedin,
+    youtube,
+    instagram
+  } = formData;
+
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    createProfile(formData, history, profile ? true : false);
+  };
+
+  return (
+    <Fragment>
+      <h1 className="large text-primary">Edit Your Profile</h1>
+      <p className="lead">
+        <i className="fas fa-user" /> Add some changes to your profile
+      </p>
+      <small>* = required field</small>
+      <form className="form" onSubmit={onSubmit}>
+        <div className="form-group">
+          <select name="status" value={status} onChange={onChange}>
+            <option>* Select Professional Status</option>
+            <option value="Developer">Developer</option>
+            <option value="Junior Developer">Junior Developer</option>
+            <option value="Senior Developer">Senior Developer</option>
+            <option value="Manager">Manager</option>
+            <option value="Student or Learning">Student or Learning</option>
+            <option value="Instructor">Instructor or Teacher</option>
+            <option value="Intern">Intern</option>
+            <option value="Other">Other</option>
+          </select>
+          <small className="form-text">
+            Give us an idea of where you are at in your career
+          </small>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Company"
+            name="company"
+            value={company}
+            onChange={onChange}
+          />
+          <small className="form-text">
+            Could be your own company or one you work for
+          </small>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Website"
+            name="website"
+            value={website}
+            onChange={onChange}
+          />
+          <small className="form-text">
+            Could be your own or a company website
+          </small>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Location"
+            name="location"
+            value={location}
+            onChange={onChange}
+          />
+          <small className="form-text">
+            City & state suggested (eg. Boston, MA)
+          </small>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="* Skills"
+            name="skills"
+            value={skills}
+            onChange={onChange}
+          />
+          <small className="form-text">
+            Please use comma separated values (eg. HTML,CSS,JavaScript,PHP)
+          </small>
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Github Username"
+            name="githubusername"
+            value={githubusername}
+            onChange={onChange}
+          />
+          <small className="form-text">
+            If you want your latest repos and a Github link, include your
+            username
+          </small>
+        </div>
+        <div className="form-group">
+          <textarea
+            placeholder="A short bio of yourself"
+            name="bio"
+            value={bio}
+            onChange={onChange}
+          />
+          <small className="form-text">Tell us a little about yourself</small>
+        </div>
+
+        <div className="my-2">
+          <button
+            onClick={() => toggleSocialInputs(!displaySocialInputs)}
+            type="button"
+            className="btn btn-light"
+          >
+            Add Social Network Links
+          </button>
+          <span>Optional</span>
+        </div>
+
+        {displaySocialInputs && (
+          <Fragment>
+            <div className="form-group social-input">
+              <i className="fab fa-twitter fa-2x" />
+              <input
+                type="text"
+                placeholder="Twitter URL"
+                name="twitter"
+                value={twitter}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="form-group social-input">
+              <i className="fab fa-facebook fa-2x" />
+              <input
+                type="text"
+                placeholder="Facebook URL"
+                name="facebook"
+                value={facebook}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="form-group social-input">
+              <i className="fab fa-youtube fa-2x" />
+              <input
+                type="text"
+                placeholder="YouTube URL"
+                name="youtube"
+                value={youtube}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="form-group social-input">
+              <i className="fab fa-linkedin fa-2x" />
+              <input
+                type="text"
+                placeholder="Linkedin URL"
+                name="linkedin"
+                value={linkedin}
+                onChange={onChange}
+              />
+            </div>
+
+            <div className="form-group social-input">
+              <i className="fab fa-instagram fa-2x" />
+              <input
+                type="text"
+                placeholder="Instagram URL"
+                name="instagram"
+                value={instagram}
+                onChange={onChange}
+              />
+            </div>
+          </Fragment>
+        )}
+
+        <input type="submit" className="btn btn-primary my-1" />
+        <Link className="btn btn-light my-1" to="/dashboard">
+          Go Back
+        </Link>
+      </form>
+    </Fragment>
+  );
+};
+
+ProfileForm.propTypes = {
+  createProfile: PropTypes.func.isRequired,
+  getCurrentProfile: PropTypes.func.isRequired,
+  profile: PropTypes.object.isRequired
+};
+
+const mapStateToProps = (state) => ({
+  profile: state.profile
+});
+
+export default connect(mapStateToProps, { createProfile, getCurrentProfile })(
+  withRouter(ProfileForm)
+);
+// nếu k có nó sẽ k cho pass history object
+```
+
+App.js
+
+```js
+<PrivateRoute
+                exact
+                path='/create-profile'
+                component={ProfileForm}
+              />
+```
+
+
+
 
 
 ### 5. Create Profile Action
 
+actions/profile.js
+
+```js
+
+// Create or update profile
+export const createProfile = (
+  formData,
+  history,
+  edit = false
+) => async dispatch => {
+  try {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const res = await axios.post('/api/profile', formData, config);
+
+    dispatch({
+      type: GET_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert(edit ? 'Profile Updated' : 'Profile Created', 'success'));
+
+    if (!edit) {
+      history.push('/dashboard');
+    }
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+```
+
 
 
 ### 6. Edit Profile
+
+DashboardAction.js
+
+```js
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const DashboardActions = () => {
+  return (
+    <div className='dash-buttons'>
+      <Link to='/edit-profile' className='btn btn-light'>
+        <i className='fas fa-user-circle text-primary' /> Edit Profile
+      </Link>
+      <Link to='/add-experience' className='btn btn-light'>
+        <i className='fab fa-black-tie text-primary' /> Add Experience
+      </Link>
+      <Link to='/add-education' className='btn btn-light'>
+        <i className='fas fa-graduation-cap text-primary' /> Add Education
+      </Link>
+    </div>
+  );
+};
+
+export default DashboardActions;
+
+```
+
+Vào DashBoard thêm `     <DashboardActions />`
+
+App.js
+
+```js
+<PrivateRoute
+                exact
+                path='/edit-profile'
+                component={ProfileForm}
+              />
+```
+
+ProfileForm
+
+```js
+ useEffect(() => {
+    if (!profile) getCurrentProfile();
+    if (!loading && profile) {
+      const profileData = { ...initialState };
+      for (const key in profile) {
+        if (key in profileData) profileData[key] = profile[key];
+      }
+      for (const key in profile.social) {
+        if (key in profileData) profileData[key] = profile.social[key];
+      }
+      if (Array.isArray(profileData.skills))
+        profileData.skills = profileData.skills.join(', ');
+      setFormData(profileData);
+    }
+  }, [loading, getCurrentProfile, profile]);
+```
+
+
+
 ### 7. Add Education & Experiences
+
+
+
 ### 8. List Education & Experiences
+
+
+
 ### 9. Delete Education, Experiences & Account
 
 
