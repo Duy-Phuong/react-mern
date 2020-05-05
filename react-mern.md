@@ -57,7 +57,9 @@ https://github.com/bradtraversy/devconnector_2.0
 
 tranduyphuong18100@gmail.com
 
-duyphuong1020
+pass: duyphuong1020
+
+test: pass 123456 hhh@gmail.com
 
 Create new project
 
@@ -3496,13 +3498,510 @@ ProfileForm
 
 ### 7. Add Education & Experiences
 
+actions.profile.js
 
+```js
+
+// Add Experience
+export const addExperience = (formData, history) => async dispatch => {
+  try {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const res = await axios.put('/api/profile/experience', formData, config);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Experience Added', 'success'));
+
+    history.push('/dashboard');
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Add Education
+export const addEducation = (formData, history) => async dispatch => {
+  try {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const res = await axios.put('/api/profile/education', formData, config);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Education Added', 'success'));
+
+    history.push('/dashboard');
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Delete experience
+export const deleteExperience = id => async dispatch => {
+  try {
+    const res = await axios.delete(`/api/profile/experience/${id}`);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Experience Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Delete education
+export const deleteEducation = id => async dispatch => {
+  try {
+    const res = await axios.delete(`/api/profile/education/${id}`);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Education Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+```
+
+racfp
+
+AddExperience
+
+```js
+import React, { Fragment, useState } from 'react';
+import { Link, withRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { addExperience } from '../../actions/profile';
+
+const AddExperience = ({ addExperience, history }) => {
+  const [formData, setFormData] = useState({
+    company: '',
+    title: '',
+    location: '',
+    from: '',
+    to: '',
+    current: false,
+    description: ''
+  });
+
+  const [toDateDisabled, toggleDisabled] = useState(false);
+
+  const { company, title, location, from, to, current, description } = formData;
+
+  const onChange = e =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  return (
+    <Fragment>
+      <h1 className='large text-primary'>Add An Experience</h1>
+      <p className='lead'>
+        <i className='fas fa-code-branch' /> Add any developer/programming positions
+        that you have had in the past
+      </p>
+      <small>* = required field</small>
+      <form
+        className='form'
+        onSubmit={e => {
+          e.preventDefault();
+          addExperience(formData, history);
+        }}
+      >
+        <div className='form-group'>
+          <input
+            type='text'
+            placeholder='* Job Title'
+            name='title'
+            value={title}
+            onChange={e => onChange(e)}
+            required
+          />
+        </div>
+        <div className='form-group'>
+          <input
+            type='text'
+            placeholder='* Company'
+            name='company'
+            value={company}
+            onChange={e => onChange(e)}
+            required
+          />
+        </div>
+        <div className='form-group'>
+          <input
+            type='text'
+            placeholder='Location'
+            name='location'
+            value={location}
+            onChange={e => onChange(e)}
+          />
+        </div>
+        <div className='form-group'>
+          <h4>From Date</h4>
+          <input
+            type='date'
+            name='from'
+            value={from}
+            onChange={e => onChange(e)}
+          />
+        </div>
+        <div className='form-group'>
+          <p>
+            <input
+              type='checkbox'
+              name='current'
+              checked={current}
+              value={current}
+              onChange={() => {
+                setFormData({ ...formData, current: !current });
+                toggleDisabled(!toDateDisabled);
+              }}
+            />{' '}
+            Current Job
+          </p>
+        </div>
+        <div className='form-group'>
+          <h4>To Date</h4>
+          <input
+            type='date'
+            name='to'
+            value={to}
+            onChange={e => onChange(e)}
+            disabled={toDateDisabled ? 'disabled' : ''}
+          />
+        </div>
+        <div className='form-group'>
+          <textarea
+            name='description'
+            cols='30'
+            rows='5'
+            placeholder='Job Description'
+            value={description}
+            onChange={e => onChange(e)}
+          />
+        </div>
+        <input type='submit' className='btn btn-primary my-1' />
+        <Link className='btn btn-light my-1' to='/dashboard'>
+          Go Back
+        </Link>
+      </form>
+    </Fragment>
+  );
+};
+
+AddExperience.propTypes = {
+  addExperience: PropTypes.func.isRequired
+};
+
+export default connect(
+  null,
+  { addExperience }
+)(withRouter(AddExperience));
+
+```
+
+App.js
+
+```js
+ <PrivateRoute
+                exact
+                path='/add-experience'
+                component={AddExperience}
+              />
+              <PrivateRoute
+                exact
+                path='/add-education'
+                component={AddEducation}
+              />
+```
+
+![image-20200505112043108](./react-mern.assets/image-20200505112043108.png)
 
 ### 8. List Education & Experiences
 
+dashboard/Experience
 
+```js
+import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
+import Moment from 'react-moment';
+import moment from 'moment';
+import { connect } from 'react-redux';
+import { deleteExperience } from '../../actions/profile';
+
+const Experience = ({ experience, deleteExperience }) => {
+  const experiences = experience.map((exp) => (
+    <tr key={exp._id}>
+      <td>{exp.company}</td>
+      <td className='hide-sm'>{exp.title}</td>
+      <td>
+        <Moment format='YYYY/MM/DD'>{moment.utc(exp.from)}</Moment> -{' '}
+        {exp.to === null ? (
+          ' Now'
+        ) : (
+          <Moment format='YYYY/MM/DD'>{moment.utc(exp.to)}</Moment>
+        )}
+      </td>
+      <td>
+        <button
+          onClick={() => deleteExperience(exp._id)}
+          className='btn btn-danger'
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ));
+
+  return (
+    <Fragment>
+      <h2 className='my-2'>Experience Credentials</h2>
+      <table className='table'>
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th className='hide-sm'>Title</th>
+            <th className='hide-sm'>Years</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>{experiences}</tbody>
+      </table>
+    </Fragment>
+  );
+};
+
+Experience.propTypes = {
+  experience: PropTypes.array.isRequired,
+  deleteExperience: PropTypes.func.isRequired,
+};
+
+export default connect(null, { deleteExperience })(Experience);
+
+```
+
+Education
+
+```js
+import React, { Fragment } from 'react';
+import PropTypes from 'prop-types';
+import Moment from 'react-moment';
+import moment from 'moment';
+import { connect } from 'react-redux';
+import { deleteEducation } from '../../actions/profile';
+
+const Education = ({ education, deleteEducation }) => {
+  const educations = education.map((edu) => (
+    <tr key={edu._id}>
+      <td>{edu.school}</td>
+      <td className='hide-sm'>{edu.degree}</td>
+      <td>
+        <Moment format='YYYY/MM/DD'>{moment.utc(edu.from)}</Moment> -{' '}
+        {edu.to === null ? (
+          ' Now'
+        ) : (
+          <Moment format='YYYY/MM/DD'>{moment.utc(edu.to)}</Moment>
+        )}
+      </td>
+      <td>
+        <button
+          onClick={() => deleteEducation(edu._id)}
+          className='btn btn-danger'
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  ));
+
+  return (
+    <Fragment>
+      <h2 className='my-2'>Education Credentials</h2>
+      <table className='table'>
+        <thead>
+          <tr>
+            <th>School</th>
+            <th className='hide-sm'>Degree</th>
+            <th className='hide-sm'>Years</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>{educations}</tbody>
+      </table>
+    </Fragment>
+  );
+};
+
+Education.propTypes = {
+  education: PropTypes.array.isRequired,
+  deleteEducation: PropTypes.func.isRequired,
+};
+
+export default connect(null, { deleteEducation })(Education);
+
+```
+
+Dashboard.js
+
+```js
+ <DashboardActions />
+          <Experience experience={profile.experience} />
+          <Education education={profile.education} />
+```
+
+https://github.com/moment/moment/issues/5484
+
+error cannot find ./locale
+
+Fix bằng     "moment": "2.24.0"
+
+
+
+![image-20200505113358672](./react-mern.assets/image-20200505113358672.png)
 
 ### 9. Delete Education, Experiences & Account
+
+actions/profile.js
+
+```js
+
+// Delete experience
+export const deleteExperience = id => async dispatch => {
+  try {
+    const res = await axios.delete(`/api/profile/experience/${id}`);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Experience Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Delete education
+export const deleteEducation = id => async dispatch => {
+  try {
+    const res = await axios.delete(`/api/profile/education/${id}`);
+
+    dispatch({
+      type: UPDATE_PROFILE,
+      payload: res.data
+    });
+
+    dispatch(setAlert('Education Removed', 'success'));
+  } catch (err) {
+    dispatch({
+      type: PROFILE_ERROR,
+      payload: { msg: err.response.statusText, status: err.response.status }
+    });
+  }
+};
+
+// Delete account & profile
+export const deleteAccount = () => async dispatch => {
+  if (window.confirm('Are you sure? This can NOT be undone!')) {
+    try {
+      await axios.delete('/api/profile');
+
+      dispatch({ type: CLEAR_PROFILE });
+      dispatch({ type: ACCOUNT_DELETED });
+
+      dispatch(setAlert('Your account has been permanently deleted'));
+    } catch (err) {
+      dispatch({
+        type: PROFILE_ERROR,
+        payload: { msg: err.response.statusText, status: err.response.status }
+      });
+    }
+  }
+};
+```
+
+reducer/profile.js
+
+```js
+case CLEAR_PROFILE:
+      return {
+        ...state,
+        profile: null,
+        repos: [],
+        loading: false,
+      };
+```
+
+reducer/auth.js
+
+```js
+case ACCOUNT_DELETED:
+      localStorage.removeItem('token'); //
+      return {
+        ...state,
+        token: null,
+        isAuthenticated: false,
+        loading: false,
+        user: null,
+      };
+```
+
+api/profile
+
+```js
+// add
+
+    // Remove user posts
+    await Post.deleteMany({ user: req.user.id });
+```
 
 
 
