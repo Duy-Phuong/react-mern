@@ -1,0 +1,332 @@
+{
+	"variables": [],
+	"info": {
+		"name": "MERN",
+		"_postman_id": "a9a64bb3-32f3-e7a9-2cdf-b823114213ea",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create user",
+			"request": {
+				"url": "http://localhost:5000/api/users/test",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"b\",\n\t\"email\" : \"b@gmail.com\",\n\t\"password\": \"123456\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "auth",
+			"request": {
+				"url": "http://localhost:5000/api/auth/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODU4Nzk3MiwiZXhwIjoxNTg4OTQ3OTcyfQ.XuF0tuG34wpzGtlwuPogVz_UGs8_fZ7d0XHKi5V6Tic",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Log in(auth)",
+			"request": {
+				"url": "http://localhost:5000/api/auth/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"email\" : \"hhh@gmail.com\",\n\t\"password\": \"123456\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "profile",
+			"request": {
+				"url": "http://localhost:5000/api/profile/me",
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODYzOTUxOSwiZXhwIjoxNTg4OTk5NTE5fQ.LQb1Kvvs5cs4XwuPWThnPT4JWJFVpEKBe7NmKRNEnAs",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "profile create update",
+			"request": {
+				"url": "http://localhost:5000/api/profile/test",
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZTY1OTA0MTczMDI0ZjM0ODYxMWMxIn0sImlhdCI6MTU4ODQ4NzU2OCwiZXhwIjoxNTg4ODQ3NTY4fQ.UwdPzxwzixfT0bgZaViPQynphRt6Pwhl4qcFWy9JKHQ",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"company\": \"bbb\",\r\n\t\"status\": \"Developer\",\r\n\t\"website\": \"abc\",\r\n\t\"skills\": \"Java, react\",\r\n\t\"location\": \"HCM\",\r\n     \"bio\": \"bio\",\r\n     \"githubusername\": \"Duy Phuong\",\r\n     \"youtube\": \"youtube link\",\r\n     \"facebook\": \"facebook link\",\r\n     \"twitter\": \"twitter link\",\r\n     \"instagram\": \"instagram link\",\r\n     \"linkedin\": \"linkedin link\"\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get all profiles",
+			"request": {
+				"url": "http://localhost:5000/api/profile/",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete profile & user",
+			"request": {
+				"url": "http://localhost:5000/api/profile/",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZTY1OTA0MTczMDI0ZjM0ODYxMWMxIn0sImlhdCI6MTU4ODQ4NzU2OCwiZXhwIjoxNTg4ODQ3NTY4fQ.UwdPzxwzixfT0bgZaViPQynphRt6Pwhl4qcFWy9JKHQ",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add profile experience",
+			"request": {
+				"url": "http://localhost:5000/api/profile/experience",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ4OTEzOSwiZXhwIjoxNTg4ODQ5MTM5fQ.XKPh_5JM1g7y4wkfCanryOovsCk_xUV_PRRoNN_GVQ8",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"title\": \"test\",\r\n      \"company\": \"rk\",\r\n      \"location\": \"Ha noi 121\",\r\n      \"from\": \"8-10-2010\",\r\n      \"current\": true,\r\n      \"description\":\"Developer\"\r\n\t\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add profile education",
+			"request": {
+				"url": "http://localhost:5000/api/profile/education",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ4OTEzOSwiZXhwIjoxNTg4ODQ5MTM5fQ.XKPh_5JM1g7y4wkfCanryOovsCk_xUV_PRRoNN_GVQ8",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n      \"school\": \"NBK 2\",\r\n      \"degree\": \"AB\",\r\n      \"fieldofstudy\": \"It\",\r\n      \"from\": \"8-10-2010\",\r\n      \"current\": true,\r\n      \"description\":\"Developer\"\r\n\t\r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete experience profile",
+			"request": {
+				"url": "http://localhost:5000/api/profile/experience/5eae6d6e1ee9c63ffc1c11de",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ4OTEzOSwiZXhwIjoxNTg4ODQ5MTM5fQ.XKPh_5JM1g7y4wkfCanryOovsCk_xUV_PRRoNN_GVQ8",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete education profile",
+			"request": {
+				"url": "http://localhost:5000/api/profile/education/5eae716ceb36851c4ce23531",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ4OTEzOSwiZXhwIjoxNTg4ODQ5MTM5fQ.XKPh_5JM1g7y4wkfCanryOovsCk_xUV_PRRoNN_GVQ8",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Save Post",
+			"request": {
+				"url": "http://localhost:5000/api/posts/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ5NjczMSwiZXhwIjoxNTg4ODU2NzMxfQ.yRp_8uZ6lVF52tFjCZhkNkzL5LpvZDgQssTCuK3N3mY",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"text\": \"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get all Post",
+			"request": {
+				"url": "http://localhost:5000/api/posts",
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ5NjczMSwiZXhwIjoxNTg4ODU2NzMxfQ.yRp_8uZ6lVF52tFjCZhkNkzL5LpvZDgQssTCuK3N3mY",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Like post",
+			"request": {
+				"url": "http://localhost:5000/api/posts/like/5eae8c47b0e9ed02e8687052",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ5NjczMSwiZXhwIjoxNTg4ODU2NzMxfQ.yRp_8uZ6lVF52tFjCZhkNkzL5LpvZDgQssTCuK3N3mY",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Comment post",
+			"request": {
+				"url": "http://localhost:5000/api/posts/comment/5eae8c47b0e9ed02e8687052",
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ5NjczMSwiZXhwIjoxNTg4ODU2NzMxfQ.yRp_8uZ6lVF52tFjCZhkNkzL5LpvZDgQssTCuK3N3mY",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"text\": \"Bad\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete post",
+			"request": {
+				"url": "http://localhost:5000/api/posts/comment/5eae8c47b0e9ed02e8687052/5eaecc64ca41d60d3c1b309c",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "x-auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNWVhZDNhZGYwYzNlMzgyMzJjZWJkOTdkIn0sImlhdCI6MTU4ODQ5NjczMSwiZXhwIjoxNTg4ODU2NzMxfQ.yRp_8uZ6lVF52tFjCZhkNkzL5LpvZDgQssTCuK3N3mY",
+						"description": ""
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": "",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"text\": \"Bad\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
