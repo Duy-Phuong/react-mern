@@ -55,6 +55,8 @@ https://github.com/bradtraversy/devconnector_2.0
 ## 2. Express & MongoDB Setup
 ### 1. MongoDB Atlas Setup
 
+https://account.mongodb.com/account/login
+
 tranduyphuong18100@gmail.com
 
 pass: duyphuong1020
@@ -250,7 +252,7 @@ const connectDB = async () => {
   } catch (err) {
     console.error(err.message);
 
-    // Exit wwith failure
+    // Exit with failure
     process.exit(1);
   }
 };
@@ -277,7 +279,7 @@ app.listen(port, () => console.log(`Server running on port ${port}`));
 
 ```
 
-Xuất hiện waring:
+Xuất hiện waring khi run `node server.js`:
 
 ![image-20200501153313391](./react-mern.assets/image-20200501153313391.png)  
 
@@ -345,7 +347,7 @@ app.listen(port, () => console.log(`Server running on port ${port}`));
 
 ```
 
-npm run server
+`npm run server`
 
 ## 3. User API Routes & JWT Authentication
 ### 1. Creating The User Model
@@ -408,6 +410,7 @@ const router = express.Router();
 // @access  Public
 router.post('/test', (req, res) => {
   console.log(req.body); // phải init mới access
+  // res.send("works")
   res.json({ msg: 'Users Works' });
 });
 
@@ -914,6 +917,7 @@ router.get('/test', auth, async (req, res) => {
 });
 
 module.exports = router;
+// user ở đây là tên của file trong model
 
 ```
 
