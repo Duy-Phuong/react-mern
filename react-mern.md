@@ -3080,9 +3080,9 @@ export default connect(mapStateToProps)(Landing);
 
 ```
 
-Nếu đã login thì redirect  to dashboard Khi ấn vào DEVCNNECTOR
+Nếu đã login thì redirect  to dashboard Khi ấn vào DEVCONNECTOR
 
-Thêm Spinner
+Thêm Spinner ở Dashboard
 
 ![image-20200505083546492](./react-mern.assets/image-20200505083546492.png)  
 
